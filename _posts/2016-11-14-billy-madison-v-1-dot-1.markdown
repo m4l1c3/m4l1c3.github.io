@@ -1,3 +1,8 @@
+---
+layout: post
+title: Billy Madison v1.1
+---
+
 #Billy Madison v1.1
 
 Starting by scanning the hosts with nmap:
