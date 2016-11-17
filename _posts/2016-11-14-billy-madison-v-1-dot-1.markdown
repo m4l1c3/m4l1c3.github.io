@@ -5,6 +5,7 @@ title: Billy Madison v1.1
 
 #Billy Madison v1.1
 
+
 Starting by scanning the hosts with nmap:
 nmap -T4 -A -v -p0-65535 192.168.110.105 -oN nmap-results.txt
 
