@@ -1,0 +1,58 @@
+---
+layout: post
+title: imf
+---
+
+#IMF
+
+##Finding machine on the network:
+
+###Nmap
+nmap -sn 192.168.1.0/24
+
+Scan for hosts on my local network (192.168.1.1) which gave me a machine named "imf"
+
+Now to run nmap on the machine itself:
+
+nmap -Pn -oA imf-nmap-results -p 0-65525 192.168.1.21
+
+Looks like port 80 is open.
+
+After clicking through the pages on the site and viewing their sources I found this: 
+
+<!-- flag1{YWxsdGhlZmlsZXM=} -->
+
+The first flag, having a = at the end looks base64 encoded.
+
+echo YWxsdGhlZmlsZXM= | base64 -d
+
+returns: allthefiles
+
+Something I noticed on the contact page was some random weird named js files:
+
+<script src="js/ZmxhZzJ7YVcxbVl.js"></script>
+<script src="js/XUnRhVzVwYzNS.js"></script>
+<script src="js/eVlYUnZjZz09fQ==.min.js"></script>
+
+Those all might combine into a base64 string, lets check it out
+
+echo ZmxhZzJ7YVcxbVlXUnRhVzVwYzNSeVlYUnZjZz09fQ== | base64 -d
+
+which  returns: flag2{aW1mYWRtaW5pc3RyYXRvcg==}
+
+after running: echo aW1mYWRtaW5pc3RyYXRvcg== | base64 -D
+
+I get:
+
+imfadministrator
+
+I tried browsing to: http://192.168.1.21/imfadministrator
+
+Loads up a login page, upon viewing the page source I find:
+
+<!-- I couldn't get the SQL working, so I hard-coded the password. It's still mad secure through. - Roger -->
+
+
+I remembered seeing emails on the contact page, went page and sure enough roger is a user, rmichaels is his email.
+
+Trying the user it seems the user is valid.
