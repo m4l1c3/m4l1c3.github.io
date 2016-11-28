@@ -36,7 +36,7 @@ Something I noticed on the contact page was some random weird named js files:
 
 Those all might combine into a base64 string, lets check it out
 
-echo ZmxhZzJ7YVcxbVlXUnRhVzVwYzNSeVlYUnZjZz09fQ== | base64 -d
+echo ZmxhZzJ7YVcxbVlXUnRhVzVwYzNSeVlYUnZjZz09fQ== | base64 -D
 
 which  returns: flag2{aW1mYWRtaW5pc3RyYXRvcg==}
 
@@ -56,3 +56,7 @@ Loads up a login page, upon viewing the page source I find:
 I remembered seeing emails on the contact page, went page and sure enough roger is a user, rmichaels is his email.
 
 Trying the user it seems the user is valid.
+
+After some googling, looks like there is a potential authentication type conversion that might get us around authentication.  Looking at a post changing the type of the data that is received server side could bypass authentication.  Intercepting the HTTP post with burp and changing pass to pass[], this ends up sending an array down to the server instead of a string, improper handling of the input must be how we can get past it.  Once the post is forwarded another flag: flag3{Y29udGludWVUT2Ntcw==} which decodes to: continueTOcms
+
+
