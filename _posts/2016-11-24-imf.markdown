@@ -59,4 +59,8 @@ Trying the user it seems the user is valid.
 
 After some googling, looks like there is a potential authentication type conversion that might get us around authentication.  Looking at a post changing the type of the data that is received server side could bypass authentication.  Intercepting the HTTP post with burp and changing pass to pass[], this ends up sending an array down to the server instead of a string, improper handling of the input must be how we can get past it.  Once the post is forwarded another flag: flag3{Y29udGludWVUT2Ntcw==} which decodes to: continueTOcms
 
+flag4{dXBsb2Fkcjk0Mi5waHA=}
+
+uploadr942.php
+
 
