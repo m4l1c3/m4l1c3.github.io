@@ -59,8 +59,11 @@ Trying the user it seems the user is valid.
 
 After some googling, looks like there is a potential authentication type conversion that might get us around authentication.  Looking at a post changing the type of the data that is received server side could bypass authentication.  Intercepting the HTTP post with burp and changing pass to pass[], this ends up sending an array down to the server instead of a string, improper handling of the input must be how we can get past it.  Once the post is forwarded another flag: flag3{Y29udGludWVUT2Ntcw==} which decodes to: continueTOcms
 
-flag4{dXBsb2Fkcjk0Mi5waHA=}
 
-uploadr942.php
+sqlmap --url http://192.168.1.21/imfadministrator/cms.php?pagename=home --threads 5 --level 5 --cookie="PHPSESSID=phpsessionid" --dbms=MYSQL --dump
+
+Important to remember the last two parameters, I missed these originally and totally didn't get some output for moving forward from the command line.
+
+Another flag: flag4{dXBsb2Fkcjk0Mi5waHA=} which decodes to: uploadr942.php
 
 
