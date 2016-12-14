@@ -66,4 +66,5 @@ Important to remember the last two parameters, I missed these originally and tot
 
 Another flag: flag4{dXBsb2Fkcjk0Mi5waHA=} which decodes to: uploadr942.php
 
+flag5{YWdlbnRzZXJ2aWNlcw==} which decodes to: agentservices
 
