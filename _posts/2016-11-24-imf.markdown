@@ -68,3 +68,21 @@ Another flag: flag4{dXBsb2Fkcjk0Mi5waHA=} which decodes to: uploadr942.php
 
 flag5{YWdlbnRzZXJ2aWNlcw==} which decodes to: agentservices
 
+Running ps -A through the webshell created to get flag5 I'm able to see all the processes running on the remote machine.  One item that loks interesting is knockd, usually this would indicate that a port knocking sequence exists to open a service up to the public.
+
+Running: netstat -vatn shows a list of the processes listening on TCP, 7788 and 22 look interesting 
+
+Trying to knock the default ports (7000 8000 9000)
+for x in 7000 8000 9000; do nmap -T4 -p $x 192.168.1.20;done;
+
+No luck though when trying to hit the interesting ports.  
+
+Trying to hit port 7788:
+
+curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=nc localhost 7788
+
+I get a little shell app. Given that we are investigating "agentservice" I do a find on agent:
+
+curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=find%20/%20-name%20%22*agent%22
+
+
