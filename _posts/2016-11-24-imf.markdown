@@ -20,7 +20,7 @@ Looks like port 80 is open.
 
 After clicking through the pages on the site and viewing their sources I found this: 
 
-<!-- flag1{YWxsdGhlZmlsZXM=} -->
+<!-- flag1{YWxsdGhlZmlsZXM==} -->
 
 The first flag, having a = at the end looks base64 encoded.
 
