@@ -1,0 +1,22 @@
+{
+  "parentTaskName": "bundle",
+  "concat": {
+      "active": true,
+      "config": {}
+    },
+  "uglify": {
+      "active": true,
+      "config": {}
+    },
+  "sourcemap": {
+      "active": false,
+      "config": {
+      }
+    },
+  "destinationFolder": "./",
+  "files": {
+      "js/app.js":[
+          "node_modules/prismjs/prism.js"
+        ]
+    }
+}
