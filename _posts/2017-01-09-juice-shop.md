@@ -1,25 +1,25 @@
 #OWASP Juice Shop
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
-<script type="text/javascript">alert('hi');</script>
+&lt;script type="text/javascript"&gt;alert('hi');&lt;/script&gt;
 
 Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.
 
 Next I looked through the login page's source to see if anything sticks out and found this:
 
-<!--
-    <li class="dropdown">
-        <a href="#/score-board">Score Board</a>
-    </li>
--->
+<lt;!--
+    <lt;li class="dropdown">gt;
+        <lt;a href="#/score-board">gt;Score Board<lt;/a>gt;
+    <lt;/li>gt;
+-->gt;
 
 Looks like I found the scoreboard for the app and it is available at the following route:
 
-<a href="#/score-board"></a>
+<lt;a href="#/score-board">gt;<lt;/a>gt;
 
 Now that I've got a list of the challenges I do the following as a search:
 
-<script>alert("XSS1")</script>
+<lt;script>gt;alert("XSS1")<lt;/script>gt;
 
 Which succesfully performs a reflected XSS attack.
 
