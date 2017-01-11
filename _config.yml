@@ -8,15 +8,4 @@ url: "http://m4l1ce.me" # the base hostname & protocol for your site
 github_username:  m4l1c3
 
 # Build settings
-markdown: kramdown
-
-# Site settings
-# title: m4l1ce.me
-email: jon@jonsomnia.com
-description: > # this means to ignore newlines until "baseurl:"
-    Stuff and things.
-baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://m4l1ce.me" # the base hostname & protocol for your site
-github_username:  m4l1c3
-# Build settings
-markdown: kramdown
+markdown: redcarpet 
