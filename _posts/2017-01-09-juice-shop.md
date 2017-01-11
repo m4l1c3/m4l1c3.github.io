@@ -7,11 +7,11 @@ Results in an alert popping up after the site issues a GET request to the server
 
 Next I looked through the login page's source to see if anything sticks out and found this:
 
-<lt;!--
+lt;!--
     <lt;li class="dropdown">gt;
         <lt;a href="#/score-board">gt;Score Board<lt;/a>gt;
     <lt;/li>gt;
--->gt;
+--gt;
 
 Looks like I found the scoreboard for the app and it is available at the following route:
 
