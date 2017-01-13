@@ -106,4 +106,10 @@ Another challenge completed.
 
 The password cracker I used identified the passwords it cracked as being md5, there is a challenge about informing the shop they're using a library/algorithm incorrectly so I gave it a shot and said the md5 implementation is weak, another challenge completed.
 
+Another challenge is to give ourselves 80% or more off of an order.
+
+Looking back at the coupon codes I found earlier it looks like it is time to figure out how those are encoded.  Maybe the package.json file from earlier will have a hint.  After seeing what several of the dependencies that we have listed are for, z85 appears to be a possibility for generating the password codes.  I downloaded the z85-cli and z85 modules from npm and ran a few coupon codes through the decoder, low and behold it decoded to the following format: MONYR-%% so I encoded JAN17-90 and got: n<Mibh.v3z, then checking out and using my code, another challenge completed.
+
+Another challenge that has been sticking in my head is the one about applying advanced cryptoanalysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an obsurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base url and got a new page along with challenge completed.
+
 
