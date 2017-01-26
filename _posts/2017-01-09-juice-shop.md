@@ -113,3 +113,7 @@ Looking back at the coupon codes I found earlier it looks like it is time to fig
 Another challenge that has been sticking in my head is the one about applying advanced cryptoanalysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an obsurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base url and got a new page along with challenge completed.
 
 
+Next I'm looking at the file upload vulnerabilities, the first seems like a simple task in Burp.  I'm going to upload a small pdf, then intercept the traffic and upload the file with a different extension.  Sucess, another challenge done.
+
+Another challenge I've been having trouble with is the item: 
+sear')) union all select null,id,description,price,null,null,null,null from products --
