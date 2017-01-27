@@ -21,15 +21,15 @@ Now that I've got a list of the challenges I do the following as a search:
 
 &lt;script&gt;alert("XSS1")&lt;/script&gt;
 
-Which succesfully performs a reflected XSS attack.
+Which successfully performs a reflected XSS attack.
 
-I next went through the process of placing an order and noticed the URL for my receipt was using a subdirectory, I tried browsing to the folder /ftp and was presented with files I could download, which ended up getting me another achievment: access a confidential document
+I next went through the process of placing an order and noticed the URL for my receipt was using a subdirectory, I tried browsing to the folder /ftp and was presented with files I could download, which ended up getting me another achievement: access a confidential document
 
-Next I was able to get ot the administration section of the store by going to:
+Next I was able to get to the administration section of the store by going to:
 
 #/administration
 
-Once on the admin page I was able to get another achievment by deleting the only user comment with a 5 star rating
+Once on the admin page I was able to get another achievement by deleting the only user comment with a 5 star rating
 
 Next I see there is a task to login as the administrator.  Based on the fact that the site already seems vulnerable to SQL injection I am going to fire up Burp Suite and try some things, the first place that came to mind to check was the login form.  I already know the admin user from getting access to the admin page that wasn't secured, but I'm going to just try using the username/email field for injection.
 
@@ -51,7 +51,10 @@ This ended up being the same for retrieving the easter egg and old coupon file.
 
 For the easter egg I got back a base64 encoded value: L2d1ci9xcmlmL25lci9mYi9zaGFhbC9ndXJsL3V2cS9uYS9ybmZncmUvcnR0L2p2Z3V2YS9ndXIvcm5mZ3JlL3J0dA== that decodes to: /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt
 
-For the coupon file: 
+Another challenge that has been sticking in my head is the one about applying advanced cryptoanalysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an absurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base url and got a new page along with challenge completed.
+
+
+For the coupon file:
 
 n<MibgC7sn
 mNYS#gC7sn
@@ -66,7 +69,7 @@ pEw8ogC7sn
 pes[BgC7sn
 l}6D$gC7ss
 
-Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about avulnerable library it is using.
+Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about a vulnerable library it is using.
 
 Looking back at the score board looks like we have an item around getting back all the users/passwords from our database, time to fire up sqlmap.  I ended up running the following command which got me back the search parameter to use:
 
@@ -95,7 +98,7 @@ Bam, a list of users and their hashed passwords, another challenge completed.
 Now to try and figure out some of these passwords.  I put the hashes all into this site:
 https://crackstation.net/
 
-This site was able to crack 2 of the user passwords, admin (already known) and jim.  Now to login as jim@juice-sh.op since thats a challenge. 
+This site was able to crack 2 of the user passwords, admin (already known) and jim.  Now to login as jim@juice-sh.op since that's a challenge.
 
 I used the following credentials:
 
@@ -109,10 +112,6 @@ The password cracker I used identified the passwords it cracked as being md5, th
 Another challenge is to give ourselves 80% or more off of an order.
 
 Looking back at the coupon codes I found earlier it looks like it is time to figure out how those are encoded.  Maybe the package.json file from earlier will have a hint.  After seeing what several of the dependencies that we have listed are for, z85 appears to be a possibility for generating the password codes.  I downloaded the z85-cli and z85 modules from npm and ran a few coupon codes through the decoder, low and behold it decoded to the following format: MONYR-%% so I encoded JAN17-90 and got: n<Mibh.v3z, then checking out and using my code, another challenge completed.
-
-Another challenge that has been sticking in my head is the one about applying advanced cryptoanalysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an obsurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base url and got a new page along with challenge completed.
-
-
 Next I'm looking at the file upload vulnerabilities, the first seems like a simple task in Burp.  I'm going to upload a small pdf, then intercept the traffic and upload the file with a different extension.  Sucess, another challenge done.
 
 Another challenge I've been having trouble with is the item: 
