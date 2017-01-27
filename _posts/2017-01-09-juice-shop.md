@@ -47,7 +47,7 @@ Back to Burp, this should be an easy task using the intercept.  Once everything 
 
 Now that I've gotten access tpo admin I'm going to take a look at getting some of the hidden files in that /ftp directory.  Right now the two .bak fils are being blocked, lets head over to burp to try and use repeater to get these files out.  I got stuck on this one and watched a walkthrough and, basically passing in null characters to the URL to trick the express routing, I initially tried %00, which didn't work, then tried %2500 and got through: /ftp/package.json.bak%2500.pdf to get the file.
 
-This ended up being the same for retrieving the easter egg and old coupon file.  
+This ended up being the same for retrieving the easter egg and old coupon file.
 
 For the easter egg I got back a base64 encoded value: L2d1ci9xcmlmL25lci9mYi9zaGFhbC9ndXJsL3V2cS9uYS9ybmZncmUvcnR0L2p2Z3V2YS9ndXIvcm5mZ3JlL3J0dA== that decodes to: /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt
 
@@ -112,7 +112,34 @@ The password cracker I used identified the passwords it cracked as being md5, th
 Another challenge is to give ourselves 80% or more off of an order.
 
 Looking back at the coupon codes I found earlier it looks like it is time to figure out how those are encoded.  Maybe the package.json file from earlier will have a hint.  After seeing what several of the dependencies that we have listed are for, z85 appears to be a possibility for generating the password codes.  I downloaded the z85-cli and z85 modules from npm and ran a few coupon codes through the decoder, low and behold it decoded to the following format: MONYR-%% so I encoded JAN17-90 and got: n<Mibh.v3z, then checking out and using my code, another challenge completed.
-Next I'm looking at the file upload vulnerabilities, the first seems like a simple task in Burp.  I'm going to upload a small pdf, then intercept the traffic and upload the file with a different extension.  Sucess, another challenge done.
 
-Another challenge I've been having trouble with is the item: 
+Next I'm looking at the file upload vulnerabilities, the first seems like a simple task in Burp.  I'm going to upload a small pdf, then intercept the traffic and upload the file with a different extension.  Success, another challenge done.
+
+The second however was a bit more tricky.  At a glance I'm guessing that the previous method with Burp is likely to be the way to go.  I started off first by just modifying my order_ from placing orders for previous challenges to get its file size a bit closer to 100kb, then messed with the file's contents in the upload request and kept getting an error.  After taking a break and coming back to it, I only used the stream section of the file for padding size and was able to intercept the upload request, update the payload and get the challenge completed.
+
+Now for more XSS based challenges, looks like we have 3 more outstanding, the first of which is performing a persisted XSS attack by circumventing a client-side security mechanism.  Sounds like another case where Burp will excel.
+
+I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS payload as the user's name, another challenge completed.
+
+The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: https://quiet-lake-65056.herokuapp.com/api to access the API and get some info, which returns: {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]} this looks like a map of the different server-side API calls start points.
+
+I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  https://quiet-lake-65056.herokuapp.com/api/Products/ was my first try, with a GET this just returns all the products in a JSON response object.  So far so good, next I tried getting a single product with this URL: https://quiet-lake-65056.herokuapp.com/api/Products/1, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product: {"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"} and success.
+
+Now for the last challenge, bypassing a server-side security mechanism.  After some pondering I decided a good way to get visibility into the server-side code would be the package.json backup we retrieved in an earlier challenge.  Int he dependencies for the application there is an item called sanitize-html.  I'm guessing this will be what I have to get past.  After googling the node module and looking through issues from the specific version called out in dependencies I found a security issue based on recursive application of sanitization.  Here was the item identified in the issue: <<img src="csrf-attack"/>img src="csrf-attack"/> would translate to: <img src="csrf-attack"/>.  Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:
+
+&lt;&lt;script&gt;alert("XSS4")&lt;/script&gt;script&gt;alert("XSS4")&lt;&lt;/script&gt;/script&gt;
+
+Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the "fork me on github" link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.
+
+Another challenge I've been having trouble with is the item getting the Christmas 2014 deal and buying it.  Since we know the search is vulnerable to SQL injection I started by trying to get back all products rather than the ones that are displayed on a page with this search:
+
 sear')) union all select null,id,description,price,null,null,null,null from products --
+
+This got me the ability to see the item and think I was adding it to my cart, but I wasn't ever able to actually purchase the item.  After googling and watch a video from 7 minute security I had the following payload (provided by OWASP dev team):
+
+christmas%25'))--
+
+The %25 ends up decoding to % which closes the SQL like that is being used for a keyword search, my guess here is that the UNION ALL method I tried first was not grabbing some piece of data that was required for the angular code to properly bind all it's parameters on the front-end resulting in an improper add to basket.
+
+
+Now to try and find the language that never got published.  This looks like a job for Burp after inspecting the URLs that are requested when picking a language it looks like each language is just a JSON file with the language code as it's name.  I ended up googling an API language code list and built a small wordlist from the page I found, then fired Burp's intruder at the site's i8n with the language code as the payload placeholder so I was issuing GET requests to https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json with placeholder being the wordlist items created from our googling.  I only had the free version of Burp available so it took a while, however I was able to find the missing language and complete the challenge.
