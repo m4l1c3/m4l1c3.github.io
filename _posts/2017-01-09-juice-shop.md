@@ -93,7 +93,7 @@ I ended up with this for the final search query:
 
 sear')) union all select id,email,password,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq' from users-- IvXq
 
-Bam, a list of users and their hashed passwords, another challenge completed.
+A list of users and their hashed passwords, another challenge completed.
 
 Now to try and figure out some of these passwords.  I put the hashes all into this site:
 https://crackstation.net/
@@ -143,3 +143,5 @@ The %25 ends up decoding to % which closes the SQL like that is being used for a
 
 
 Now to try and find the language that never got published.  This looks like a job for Burp after inspecting the URLs that are requested when picking a language it looks like each language is just a JSON file with the language code as it's name.  I ended up googling an API language code list and built a small wordlist from the page I found, then fired Burp's intruder at the site's i8n with the language code as the payload placeholder so I was issuing GET requests to https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json with placeholder being the wordlist items created from our googling.  I only had the free version of Burp available so it took a while, however I was able to find the missing language and complete the challenge.
+
+After a lot of failed attempts, I ended up looking at the source (since it was availableon github) and figured out the language that never made it to production was klingon -- tlh) so all my brute forcing failed based on using "normal" languages.  Either way though, challenge completed.
