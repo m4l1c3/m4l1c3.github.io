@@ -1,26 +1,29 @@
 #OWASP Juice Shop
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
+{% highlight html %}
 &lt;script type="text/javascript"&gt;alert('hi');&lt;/script&gt;
-
+{% endhighlight %}
 Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.
 
 Next I looked through the login page's source to see if anything sticks out and found this:
 
+{% highlight html %}
 &lt;!--
     &lt;li class="dropdown"&gt;
        &lt;a href="#/score-board"&gt;Score Board&lt;/a&gt;
     &lt;/li&gt;
 --&gt;
-
+{% endhighlight %}
 Looks like I found the scoreboard for the app and it is available at the following route:
 
+{% highlight html %}
 &lt;a href="#/score-board"&gt;Score Board&lt;/a&gt;
-
+{% endhighlight %}
 Now that I've got a list of the challenges I do the following as a search:
-
+{% highlight html %}
 &lt;script&gt;alert("XSS1")&lt;/script&gt;
-
+{% endhighlight %}
 Which successfully performs a reflected XSS attack.
 
 I next went through the process of placing an order and noticed the URL for my receipt was using a subdirectory, I tried browsing to the folder /ftp and was presented with files I could download, which ended up getting me another achievement: access a confidential document
@@ -45,13 +48,13 @@ First I tried just manipulating the markup to see if I'd be able to just change 
 
 Back to Burp, this should be an easy task using the intercept.  Once everything is up and running I can see in the quantity being passed to the server, after changing the value to -100000 and forwarding traffic I can see a large negative total for the line item, now to checkout, and bam challenge completed.
 
-Now that I've gotten access tpo admin I'm going to take a look at getting some of the hidden files in that /ftp directory.  Right now the two .bak fils are being blocked, lets head over to burp to try and use repeater to get these files out.  I got stuck on this one and watched a walkthrough and, basically passing in null characters to the URL to trick the express routing, I initially tried %00, which didn't work, then tried %2500 and got through: /ftp/package.json.bak%2500.pdf to get the file.
+Now that I've gotten access to admin I'm going to take a look at getting some of the hidden files in that /ftp directory.  Right now the two .bak fils are being blocked, lets head over to burp to try and use repeater to get these files out.  I got stuck on this one and watched a walkthrough and, basically passing in null characters to the URL to trick the express routing, I initially tried %00, which didn't work, then tried %2500 and got through: /ftp/package.json.bak%2500.pdf to get the file.
 
 This ended up being the same for retrieving the easter egg and old coupon file.
 
 For the easter egg I got back a base64 encoded value: L2d1ci9xcmlmL25lci9mYi9zaGFhbC9ndXJsL3V2cS9uYS9ybmZncmUvcnR0L2p2Z3V2YS9ndXIvcm5mZ3JlL3J0dA== that decodes to: /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt
 
-Another challenge that has been sticking in my head is the one about applying advanced cryptoanalysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an absurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base url and got a new page along with challenge completed.
+Another challenge that has been sticking in my head is the one about applying advanced crypto-analysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an absurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base URL and got a new page along with challenge completed.
 
 
 For the coupon file:
@@ -72,9 +75,9 @@ l}6D$gC7ss
 Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about a vulnerable library it is using.
 
 Looking back at the score board looks like we have an item around getting back all the users/passwords from our database, time to fire up sqlmap.  I ended up running the following command which got me back the search parameter to use:
-
+{% highlight bash %}
 sqlmap -u "https://quiet-lake-65056.herokuapp.com/rest/product/search?q=test" --level=2 -p "q" --dbms="sqlite" --dump --proxy=http://10.1.206.89:8081
-
+{% endhighlight %}
 The parameters are used as follows:
 -u = URL to attack
 -level = the level of attack to execute
@@ -84,15 +87,15 @@ The parameters are used as follows:
 -proxy = the proxy to run requests through
 
 Once we get through things the following comes back with the following:
-
+{% highlight sql %}
 sear')) union all select null,null,null,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq'-- IvXq
-
+{% endhighlight %}
 Plugging that into the browser we get a partial product grid.  Time to start figuring out how to get the users and password back.
 
 I ended up with this for the final search query:
-
+{% highlight sql %}
 sear')) union all select id,email,password,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq' from users-- IvXq
-
+{% endhighlight %}
 A list of users and their hashed passwords, another challenge completed.
 
 Now to try and figure out some of these passwords.  I put the hashes all into this site:
@@ -123,22 +126,31 @@ I had to try several forms first of which was the complaint form, then the conta
 
 The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: https://quiet-lake-65056.herokuapp.com/api to access the API and get some info, which returns: {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]} this looks like a map of the different server-side API calls start points.
 
-I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  https://quiet-lake-65056.herokuapp.com/api/Products/ was my first try, with a GET this just returns all the products in a JSON response object.  So far so good, next I tried getting a single product with this URL: https://quiet-lake-65056.herokuapp.com/api/Products/1, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product: {"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"} and success.
+I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  https://quiet-lake-65056.herokuapp.com/api/Products/ was my first try, with a GET this just returns all the products in a JSON response object.  So far so good, next I tried getting a single product with this URL: https://quiet-lake-65056.herokuapp.com/api/Products/1, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
+{%highlight json %}
+{"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"}
+{% endhighlight %}
+
+Success
 
 Now for the last challenge, bypassing a server-side security mechanism.  After some pondering I decided a good way to get visibility into the server-side code would be the package.json backup we retrieved in an earlier challenge.  Int he dependencies for the application there is an item called sanitize-html.  I'm guessing this will be what I have to get past.  After googling the node module and looking through issues from the specific version called out in dependencies I found a security issue based on recursive application of sanitization.  Here was the item identified in the issue: <<img src="csrf-attack"/>img src="csrf-attack"/> would translate to: <img src="csrf-attack"/>.  Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:
 
+{% highlight html %}
 &lt;&lt;script&gt;alert("XSS4")&lt;/script&gt;script&gt;alert("XSS4")&lt;&lt;/script&gt;/script&gt;
+{% endhighlight %}
 
 Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the "fork me on github" link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.
 
 Another challenge I've been having trouble with is the item getting the Christmas 2014 deal and buying it.  Since we know the search is vulnerable to SQL injection I started by trying to get back all products rather than the ones that are displayed on a page with this search:
 
+{% highlight sql %}
 sear')) union all select null,id,description,price,null,null,null,null from products --
-
+{% endhighlight %}
 This got me the ability to see the item and think I was adding it to my cart, but I wasn't ever able to actually purchase the item.  After googling and watch a video from 7 minute security I had the following payload (provided by OWASP dev team):
 
+{% highlight sql %}
 christmas%25'))--
-
+{% endhighlight %}
 The %25 ends up decoding to % which closes the SQL like that is being used for a keyword search, my guess here is that the UNION ALL method I tried first was not grabbing some piece of data that was required for the angular code to properly bind all it's parameters on the front-end resulting in an improper add to basket.
 
 Now to try and find the language that never got published.  This looks like a job for Burp after inspecting the URLs that are requested when picking a language it looks like each language is just a JSON file with the language code as it's name.  I ended up googling an API language code list and built a small wordlist from the page I found, then fired Burp's intruder at the site's i8n with the language code as the payload placeholder so I was issuing GET requests to https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json with placeholder being the wordlist items created from our googling.  I only had the free version of Burp available so it took a while, however I was able to find the missing language and complete the challenge.
