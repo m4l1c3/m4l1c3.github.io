@@ -2,27 +2,27 @@
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
 {% highlight html %}
-&lt;script type="text/javascript"&gt;alert('hi');&lt;/script&gt;
+<script type="text/javascript">alert('hi');</script>
 {% endhighlight %}
 Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.
 
 Next I looked through the login page's source to see if anything sticks out and found this:
 
 {% highlight html %}
-&lt;!--
-    &lt;li class="dropdown"&gt;
-       &lt;a href="#/score-board"&gt;Score Board&lt;/a&gt;
-    &lt;/li&gt;
---&gt;
+<!--
+    <li class="dropdown">
+       <a href="#/score-board">Score Board</a>
+    </li>
+-->
 {% endhighlight %}
 Looks like I found the scoreboard for the app and it is available at the following route:
 
 {% highlight html %}
-&lt;a href="#/score-board"&gt;Score Board&lt;/a&gt;
+<a href="#/score-board">Score Board</a>
 {% endhighlight %}
 Now that I've got a list of the challenges I do the following as a search:
 {% highlight html %}
-&lt;script&gt;alert("XSS1")&lt;/script&gt;
+<script>alert("XSS1")</script>
 {% endhighlight %}
 Which successfully performs a reflected XSS attack.
 
@@ -122,13 +122,13 @@ The second however was a bit more tricky.  At a glance I'm guessing that the pre
 
 Now for more XSS based challenges, looks like we have 3 more outstanding, the first of which is performing a persisted XSS attack by circumventing a client-side security mechanism.  Sounds like another case where Burp will excel.
 
-I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (&lt;script&gt;alert("XSS2")&lt;/script&gt;) payload as the user's name, another challenge completed.
+I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (<script>alert("XSS2")</script>) payload as the user's name, another challenge completed.
 
 The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: https://quiet-lake-65056.herokuapp.com/api to access the API and get some info, which returns: {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]} this looks like a map of the different server-side API calls start points.
 
 I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  https://quiet-lake-65056.herokuapp.com/api/Products/ was my first try, with a GET this just returns all the products in a JSON response object.  So far so good, next I tried getting a single product with this URL: https://quiet-lake-65056.herokuapp.com/api/Products/1, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
 {%highlight json %}
-{"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"}
+{"description": "<script>alert(\"XSS3\")</script>"}
 {% endhighlight %}
 
 Success
@@ -136,7 +136,7 @@ Success
 Now for the last challenge, bypassing a server-side security mechanism.  After some pondering I decided a good way to get visibility into the server-side code would be the package.json backup we retrieved in an earlier challenge.  Int he dependencies for the application there is an item called sanitize-html.  I'm guessing this will be what I have to get past.  After googling the node module and looking through issues from the specific version called out in dependencies I found a security issue based on recursive application of sanitization.  Here was the item identified in the issue: <<img src="csrf-attack"/>img src="csrf-attack"/> would translate to: <img src="csrf-attack"/>.  Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:
 
 {% highlight html %}
-&lt;&lt;script&gt;alert("XSS4")&lt;/script&gt;script&gt;alert("XSS4")&lt;&lt;/script&gt;/script&gt;
+<<script>alert("XSS4")</script>script>alert("XSS4")<</script>/script>
 {% endhighlight %}
 
 Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the "fork me on github" link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.
