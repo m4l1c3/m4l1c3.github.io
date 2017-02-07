@@ -58,7 +58,7 @@ Another challenge that has been sticking in my head is the one about applying ad
 
 
 For the coupon file:
-
+{% highlight bash %}
 n<MibgC7sn
 mNYS#gC7sn
 o*IVigC7sn
@@ -71,7 +71,7 @@ q:<IqgC7sn
 pEw8ogC7sn
 pes[BgC7sn
 l}6D$gC7ss
-
+{% endhighlight %}
 Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about a vulnerable library it is using.
 
 Looking back at the score board looks like we have an item around getting back all the users/passwords from our database, time to fire up sqlmap.  I ended up running the following command which got me back the search parameter to use:
