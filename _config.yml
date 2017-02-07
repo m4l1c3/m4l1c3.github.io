@@ -8,4 +8,5 @@ url: "http://m4l1ce.me" # the base hostname & protocol for your site
 github_username:  m4l1c3
 
 # Build settings
-markdown: redcarpet 
+markdown: redcarpet
+extensions: [fenced_code_blocks]
