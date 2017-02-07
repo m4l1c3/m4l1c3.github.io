@@ -122,7 +122,7 @@ The second however was a bit more tricky.  At a glance I'm guessing that the pre
 
 Now for more XSS based challenges, looks like we have 3 more outstanding, the first of which is performing a persisted XSS attack by circumventing a client-side security mechanism.  Sounds like another case where Burp will excel.
 
-I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (<script>alert("XSS2")</script>) payload as the user's name, another challenge completed.
+I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (&lt;script&gt;alert("XSS2")&lt;/script&gt;) payload as the user's name, another challenge completed.
 
 The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: https://quiet-lake-65056.herokuapp.com/api to access the API and get some info, which returns:
 {% highlight json  %}
