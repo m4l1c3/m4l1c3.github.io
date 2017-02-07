@@ -119,7 +119,7 @@ The second however was a bit more tricky.  At a glance I'm guessing that the pre
 
 Now for more XSS based challenges, looks like we have 3 more outstanding, the first of which is performing a persisted XSS attack by circumventing a client-side security mechanism.  Sounds like another case where Burp will excel.
 
-I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS payload as the user's name, another challenge completed.
+I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (&lt;script&gt;alert("XSS2")&lt;/script&gt;) payload as the user's name, another challenge completed.
 
 The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: https://quiet-lake-65056.herokuapp.com/api to access the API and get some info, which returns: {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]} this looks like a map of the different server-side API calls start points.
 
@@ -141,8 +141,6 @@ christmas%25'))--
 
 The %25 ends up decoding to % which closes the SQL like that is being used for a keyword search, my guess here is that the UNION ALL method I tried first was not grabbing some piece of data that was required for the angular code to properly bind all it's parameters on the front-end resulting in an improper add to basket.
 
-
 Now to try and find the language that never got published.  This looks like a job for Burp after inspecting the URLs that are requested when picking a language it looks like each language is just a JSON file with the language code as it's name.  I ended up googling an API language code list and built a small wordlist from the page I found, then fired Burp's intruder at the site's i8n with the language code as the payload placeholder so I was issuing GET requests to https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json with placeholder being the wordlist items created from our googling.  I only had the free version of Burp available so it took a while, however I was able to find the missing language and complete the challenge.
 
-After a lot of failed attempts, I ended up looking at the source (since it was availableon github) and figured out the language that never made it to production was klingon -- tlh) so all my brute forcing failed based on using "normal" languages.  Either way though, challenge completed.
-
+After a lot of failed attempts, I ended up looking at the source (since it was available on github) and figured out the language that never made it to production was klingon -- tlh) so all my brute forcing failed based on using "normal" languages.  Either way though, challenge completed.
