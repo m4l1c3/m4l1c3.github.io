@@ -131,8 +131,12 @@ The next XSS challenge is to perform a persisted XSS attack without using the fr
 {% highlight json  %}
 {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]}
 {% endhighlight %}
-> This looks like a map of the different server-side API calls start points.
-> I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  <https://quiet-lake-65056.herokuapp.com/api/Products/> was my first try, with a GET this just returns all the products in a JSON response object.  So far so good, next I tried getting a single product with this URL: <https://quiet-lake-65056.herokuapp.com/api/Products/1>, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
+
+This looks like a map of the different server-side API calls start points.
+
+I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  <https://quiet-lake-65056.herokuapp.com/api/Products/> was my first try, with a GET this just returns all the products in a JSON response object.
+
+So far so good, next I tried getting a single product with this URL: <https://quiet-lake-65056.herokuapp.com/api/Products/1>, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
 {%highlight json %}
 {"description": "<script>alert(\"XSS3\")</script>"}
 {% endhighlight %}
