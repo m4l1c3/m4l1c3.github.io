@@ -199,7 +199,7 @@ Looks like a base64 encoded password gets sent back from Google, which was then 
 After running
 
 {% highlight bash %}
-echo bTRsMWMzQG00bDFjZS5tZQ== | base64 -D jon@jonsomnia.com
+echo bTRsMWMzQG00bDFjZS5tZQ== | base64 -D m4l1c3@m4l1c3.me
 {% endhighlight %}
 
 I get the email back.
