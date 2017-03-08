@@ -1,3 +1,9 @@
+---
+layout: post
+title: OWASP Juice Shop
+---
+
+
 #OWASP Juice Shop
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
