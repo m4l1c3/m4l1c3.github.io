@@ -10,3 +10,13 @@ github_username:  m4l1c3
 # Build settings
 markdown: redcarpet
 extensions: [fenced_code_blocks]
+
+#collections/categories
+collections:
+    writeups:
+        output: true
+        permalink: /writeups/:name/
+    bash:
+        output: true
+        permalink: /bash/:name/
+    

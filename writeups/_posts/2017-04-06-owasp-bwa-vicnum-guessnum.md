@@ -1,6 +1,8 @@
 ---
 layout: post
 title: OWASP Broken Web Apps Vicnum - Guessnum
+slug: owasp-broken-web-apps-vicnum-guessnum
+name: OWASP Broken Web Apps Vicnum - Guessnum
 ---
 
 I started off just playing the game to see what happens moving through the workflow.  After guessing the number in 8 tries I noticed that the count is being passed from the success page over to the scoreboard, using repeater to repeat with different parameters it turns out you can make up your own score by updating the paramter &cnt.
