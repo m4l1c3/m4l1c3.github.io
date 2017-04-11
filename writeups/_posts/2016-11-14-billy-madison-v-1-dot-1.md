@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Billy Madison v1.1
+slug: billy-madison
+name: Billy Madison v1.1
 ---
 
 Starting by scanning the hosts with nmap:

@@ -1,6 +1,8 @@
 ---
 layout: post
 title: OWASP Broken Web Apps Vicnum - Jotto
+slug: owasp-broken-web-apps-vicnum-jotto
+name: OWASP Broken Web Apps Vicnum - Jotto
 ---
 
 I started off just playing the game to see what happens moving through the workflow.  After guessing the word in 43 tries I noticed that the count is being passed from the success page over to the scoreboard, much like its sibling application this ends up being something we can modify in transit.
