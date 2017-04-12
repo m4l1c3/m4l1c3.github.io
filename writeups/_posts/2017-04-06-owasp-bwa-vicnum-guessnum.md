@@ -1,7 +1,7 @@
 ---
 layout: post
 title: OWASP Broken Web Apps Vicnum - Guessnum
-slug: owasp-broken-web-apps-vicnum-guessnum
+slug: writeups
 name: OWASP Broken Web Apps Vicnum - Guessnum
 ---
 
