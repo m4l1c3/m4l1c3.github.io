@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Billy Madison v1.1
-slug: billy-madison
+slug: writeups
 name: Billy Madison v1.1
 ---
 
