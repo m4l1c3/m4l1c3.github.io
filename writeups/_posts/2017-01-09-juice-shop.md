@@ -1,7 +1,7 @@
 ---
 layout: post
 title: OWASP Juice Shop
-slug: writeups
+slug: juice-shop
 name: Juice Shop
 ---
 
