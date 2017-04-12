@@ -1,7 +1,7 @@
 ---
 layout: post
 title: OWASP Broken Web Apps Vicnum - Jotto
-slug: writeups
+slug: owasp-broken-web-apps-vicnum-jotto
 name: OWASP Broken Web Apps Vicnum - Jotto
 ---
 
