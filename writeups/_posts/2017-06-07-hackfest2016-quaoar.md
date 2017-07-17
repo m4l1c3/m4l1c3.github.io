@@ -4,6 +4,7 @@ title: hackfest2016-Quaroar
 slug: hackfest-2016-quaroar
 name: hackfest2016-Quaroar
 ---
+# Quaoar
 
 {% highlight bash %}
 root@425a6cebc5e3:/# nmap -T4 -A -sC -v -P 0-65535 192.168.171.128 -oA quaoar
@@ -169,7 +170,7 @@ The VM mentions using dirbuster, so I fired that up with the default wordlists a
 Looks like there are 2 web apps running:
 
 > Wordpress -- /wordpress
-> Lepton CMS 2 -- /upload 
+> Lepton CMS 2 -- /upload
 
 ## Lepton CMS
 
@@ -508,6 +509,10 @@ Now that the meterpreter handler is running I can fire up the shell and now we h
 Now that I have shell:
 
 {% highlight bash %}
+cat /home/wpadmin/flag.txt
+{% endhighlight %}
+
+{% highlight bash %}
 cd ../../../../
 pwd
 /var/www/wordpress
@@ -536,4 +541,12 @@ pass: rootpassword!
 
 And we're in, do a quick ls and see the flag:
 
-8e3f9ec016e3598c5eec11fd3d73f6fb
+{% highlight bash %}
+cat /root/flag.txt
+{% endhighlight %}
+
+Lastly:
+
+{% highlight bash %}
+cat /etc/cron.d/php5
+{% endhighlight %}
