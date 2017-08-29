@@ -11,6 +11,8 @@ github_username:  m4l1c3
 markdown: redcarpet
 extensions: [fenced_code_blocks]
 
+exclude: [vendor]
+
 #collections/categories
 collections:
     writeups:
