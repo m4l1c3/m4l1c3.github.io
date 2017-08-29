@@ -2,12 +2,10 @@ language: ruby
 rvm:
 - 2.3.3
 
-before_script:
- - 'bundle lock --add-platform ruby;bundle lock --add-platform x86_64-linux' # or do this locally and commit
-
 # Assume bundler is being used, therefore
 # the `install` step will run `bundle install` by default.
-script: 'bundle lock --add-platform ruby;bundle lock --add-platform x86_64-linux'
+script:
+  - "bundle exec jekyll build"
 
 # branch whitelist, only for GitHub Pages
 branches:
