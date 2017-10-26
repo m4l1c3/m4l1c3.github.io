@@ -1,17 +1,20 @@
 language: ruby
+rvm:
+- 2.3.3
 
-install:
-  # Install binary pandoc from Rstudio
-  # To use Pandoc, uncomment the following
-  - export PATH="$HOME/pandoc:$PATH"
-  - mkdir $HOME/pandoc
-  - curl -O https://s3.amazonaws.com/rstudio-buildtools/pandoc-1.12.3.zip
-  - unzip -j pandoc-1.12.3.zip pandoc-1.12.3/linux/debian/x86_64/pandoc
-      -d $HOME/pandoc
-  - chmod +x $HOME/pandoc/pandoc
-  - pandoc --version
+# Assume bundler is being used, therefore
+# the `install` step will run `bundle install` by default.
+script:
+  - "bundle install && bundle exec jekyll build"
 
-  # Install Jekyll and dependencies
-  - bundle install
+# branch whitelist, only for GitHub Pages
+branches:
+  only:
+  - gh-pages     # test the gh-pages branch
+  - /pages-(.*)/ # test every branch which starts with "pages-"
 
-script: bundle exec rake site:deploy --quiet
+env:
+  global:
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true # speeds up installation of html-proofer
+
+sudo: false # route your build to the container-based infrastructure for a faster build
