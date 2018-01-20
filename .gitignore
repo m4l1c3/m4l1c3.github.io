@@ -4,3 +4,4 @@ node_modules
 *.orig
 
 *.swp
+.DS_Store
