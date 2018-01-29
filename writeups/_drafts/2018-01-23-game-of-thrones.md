@@ -637,3 +637,139 @@ echo 'TmljZSEgeW91IGNvbnF1ZXJlZCB0aGUgS2luZ2RvbSBvZiB0aGUgTW91bnRhaW4gYW5kIHRoZS
 Nice! you conquered the Kingdom of the Mountain and the Vale. This is your flag: bb3aec0fdcdbc2974890f805c585d432. Next stop the Kingdom of the Reach. You can identify yourself with this user/pass combination: olennatyrell@7kingdoms.ctf/H1gh.Gard3n.powah , but first you must be able to open the gates
 
 {% endhighlight %}
+
+
+Now for the reach, I tried telnet and curl, nothing seemed to work on the port nmap found.  Then I remembered one of the original hints, a list of numbers for use by polite people, I decided to try port-knocking to see if that opens something up:
+
+{% highlight bash %}
+
+
+for x in 3487 64535 12345;do nmap -Pn --host_timeout 201 --max-retries 0 -p $x 192.168.1.50; done
+
+Starting Nmap 7.60 ( https://nmap.org ) at 2018-01-26 16:20 MST
+Nmap scan report for winterfell.7kingdoms.ctf (192.168.1.50)
+Host is up (0.00089s latency).
+
+PORT     STATE  SERVICE
+3487/tcp closed ltctcp
+MAC Address: 00:0C:29:F9:EE:88 (VMware)
+
+Nmap done: 1 IP address (1 host up) scanned in 0.25 seconds
+
+Starting Nmap 7.60 ( https://nmap.org ) at 2018-01-26 16:20 MST
+Nmap scan report for winterfell.7kingdoms.ctf (192.168.1.50)
+Host is up (0.00087s latency).
+
+PORT      STATE  SERVICE
+64535/tcp closed unknown
+MAC Address: 00:0C:29:F9:EE:88 (VMware)
+
+Nmap done: 1 IP address (1 host up) scanned in 0.20 seconds
+
+Starting Nmap 7.60 ( https://nmap.org ) at 2018-01-26 16:20 MST
+Nmap scan report for winterfell.7kingdoms.ctf (192.168.1.50)
+Host is up (0.00050s latency).
+
+PORT      STATE  SERVICE
+12345/tcp closed netbus
+MAC Address: 00:0C:29:F9:EE:88 (VMware)
+
+Nmap done: 1 IP address (1 host up) scanned in 0.18 seconds
+{% endhighlight %}
+
+Then tried accessing the imap server again:
+
+{% highlight bash %}
+
+telnet 192.168.1.50 143
+Trying 192.168.1.50...
+Connected to 192.168.1.50.
+Escape character is '^]'.
+* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=LOGIN AUTH=PLAIN] Kingdom of the Reach
+^]
+
+telnet> quit
+Connection closed.
+
+{% endhighlight %}
+
+Looks open now, time to start trying to get info, did some searching looks like this can be done with curl:
+
+{% highlight bash %}
+
+curl --url "imap://192.168.1.50:143" --user "olennatyrell@7kingdoms.ctf:H1gh.Gard3n.powah"
+* LIST (\HasNoChildren \Trash) "/" Trash
+* LIST (\HasNoChildren \Drafts) "/" Drafts
+* LIST (\HasNoChildren \Sent) "/" Sent
+* LIST (\HasNoChildren) "/" INBOX<Paste>
+
+
+
+{% endhighlight %}
+
+Now to enumerate the folders:
+
+{% highlight bash %}
+for x in Trash Drafts Sent INBOX; do curl --url "imap://192.168.1.50:143/" --user "olennatyrell@7kingdoms.ctf:H1gh.Gard3n.powah" --request "EXAMINE $x";done
+* FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+* OK [PERMANENTFLAGS ()] Read-only mailbox.
+* 0 EXISTS
+* 0 RECENT
+* OK [UIDVALIDITY 1504823859] UIDs valid
+* OK [UIDNEXT 1] Predicted next UID
+* OK [HIGHESTMODSEQ 1] Highest
+* FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+* OK [PERMANENTFLAGS ()] Read-only mailbox.
+* 0 EXISTS
+* 0 RECENT
+* OK [UIDVALIDITY 1504823860] UIDs valid
+* OK [UIDNEXT 1] Predicted next UID
+* OK [HIGHESTMODSEQ 1] Highest
+* FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+* OK [PERMANENTFLAGS ()] Read-only mailbox.
+* 0 EXISTS
+* 0 RECENT
+* OK [UIDVALIDITY 1504823861] UIDs valid
+* OK [UIDNEXT 1] Predicted next UID
+* OK [HIGHESTMODSEQ 1] Highest
+* FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+* OK [PERMANENTFLAGS ()] Read-only mailbox.
+* 1 EXISTS
+* 1 RECENT
+* OK [UNSEEN 1] First unseen.
+* OK [UIDVALIDITY 1504823858] UIDs valid
+* OK [UIDNEXT 2] Predicted next UID
+* OK [HIGHESTMODSEQ 1] Highest
+{% endhighlight %}
+
+Looks like the inbox has a message, let's take a look:
+
+{% highlight bash %}
+
+curl --url "imap://192.168.1.50:143/INBOX/;UID=1" --user "olennatyrell@7kingdoms.ctf:H1gh.Gard3n.powah"
+Return-Path: <lorastyrell@7kingdoms.ctf>
+Delivered-To: olennatyrell@7kingdoms.ctf
+Received: by mail.7kingdoms.ctf (Postfix, from userid 0)
+	id E1FA643329; Fri,  8 Sep 2017 00:37:37 +0200 (CEST)
+Subject: You conquered the Kingdom of the Reach
+From: Sir_Loras_Tyrell<lorastyrell@7kingdoms.ctf>
+To: <olennatyrell@7kingdoms.ctf>
+X-Mailer: mail (GNU Mailutils 2.99.98)
+Message-Id: <20170907223737.E1FA643329@mail.7kingdoms.ctf>
+Date: Fri,  8 Sep 2017 00:37:37 +0200 (CEST)
+
+Congratulations!!
+
+You conquered the Kingdom of the Reach. This is the flag: aee750c2009723355e2ac57564f9c3db
+
+Now you can auth on next Kingdom (The Rock, port 1337) using this user/pass combination:
+User: TywinLannister
+Pass: LannisterN3verDie!
+
+"The things I do for love..." - Jaime (Kingslayer) Lannister
+
+{% endhighlight %}
+
+This one I had trouble with again, no ability to hit port 1337 in my browser, seems like the VM doesn't work, tried rebooting it just doesn't seem to work.
+
+
