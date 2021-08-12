@@ -1,9 +1,7 @@
----
-layout: post
-title: Damn vulnerable web app
-slug: damn-vulnerable-web-app
-name: damn-vulnerable-web-app
----
++++
+title = "Damn vulnerable web app"
+slug = "damn-vulnerable-web-app"
++++
 
 #Brute force
 

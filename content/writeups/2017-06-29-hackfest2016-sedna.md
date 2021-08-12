@@ -1,9 +1,7 @@
----
-layout: post
-title: hackfest2016-Sedna
-slug: hackfest-2016-sedna
-name: hackfest2016-Sedna
----
++++
+title = "hackfest2016-Sedna"
+slug = "hackfest-2016-sedna"
++++
 
 # Sedna
 

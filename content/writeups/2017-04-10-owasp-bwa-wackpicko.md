@@ -1,9 +1,7 @@
----
-layout: post
-title: OWASP Broken Web Apps WackoPicko
-slug: owasp-broken-web-apps-wackopicko
-name: OWASP Broken Web Apps WackoPicko
----
++++
+title = "OWASP Broken Web Apps WackoPicko"
+slug = "owasp-broken-web-apps-wackopicko"
++++
 
 Right off the bat, try hitting the search box with a simple XSS payload:
 

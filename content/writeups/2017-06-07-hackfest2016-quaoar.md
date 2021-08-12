@@ -1,9 +1,7 @@
----
-layout: post
-title: hackfest2016-Quaroar
-slug: hackfest-2016-quaroar
-name: hackfest2016-Quaroar
----
++++
+title = "hackfest2016-Quaroar"
+slug = "hackfest-2016-quaroar"
++++
 # Quaoar
 
 {% highlight bash %}

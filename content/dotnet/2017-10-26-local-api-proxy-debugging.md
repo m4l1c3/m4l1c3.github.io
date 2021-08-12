@@ -1,9 +1,7 @@
----
-layout: post
-title: Local API Proxy Debugging in .Net
-slug: local-api-proxy-debugging-dot-net
-name: Local API Proxy Debugging in .Net
----
++++
+title = "Local API Proxy Debugging in .Net"
+slug = "local-api-proxy-debugging-dot-net"
++++
 
 # How to point local APIs to Burp Suite in a microservice architecture
 

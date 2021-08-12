@@ -1,9 +1,8 @@
----
-layout: post
-title: hackfest2016-Orcus
-slug: hackfest-2016-orcus
-name: hackfest2016-Orcus
----
++++
+title = "hackfest2016-Orcus"
+slug = "hackfest-2016-orcus"
++++
+
 # Orcus
 
 Start out by hitting: http://10.37.129.9/ looks about the same as the previous two.

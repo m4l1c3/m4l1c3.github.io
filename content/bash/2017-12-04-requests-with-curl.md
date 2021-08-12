@@ -1,9 +1,7 @@
----
-layout: post
-title: Impersonating local requests with curl
-slug: impersonating-local-requests-withcurl
-name: Impersonating local requests with curl
----
++++
+title = "Impersonating local requests with curl"
+slug = "impersonating-local-requests-withcurl"
++++
 
 {% highlight bash %}
 

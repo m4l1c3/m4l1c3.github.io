@@ -1,9 +1,7 @@
----
-layout: post
-title: OWASP Juice Shop
-slug: juice-shop
-name: Juice Shop
----
++++
+title = "OWASP Juice Shop"
+slug = "juice-shop"
++++
 
 
 #OWASP Juice Shop
