@@ -11,8 +11,18 @@ highlight_code = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = false
 
-theme = "zola.386"
+theme = "adidoks"
 
 [extra]
 # Put all your custom variables here
-
+keywords = "hack"
+author = "m4l1c3"
+year = "2021"
+theme_color = "#000084"
+zola386_menu = [
+  {path="", name="Home"},
+  {path="categories", name="Categories"},
+  {path="tags", name="Tags"},
+  {path="about", name="About"},
+]
+paginate_by = 5
