@@ -1,6 +1,9 @@
 +++
 title = "Local API Proxy Debugging in .Net"
 slug = "local-api-proxy-debugging-dot-net"
+[taxonomies]
+categories=["code"]
+tags=["dotnet", "burpsuite"]
 +++
 
 # How to point local APIs to Burp Suite in a microservice architecture

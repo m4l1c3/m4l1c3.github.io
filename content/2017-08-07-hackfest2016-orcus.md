@@ -1,6 +1,9 @@
 +++
 title = "hackfest2016-Orcus"
 slug = "hackfest-2016-orcus"
+[taxonomies]
+categories=["vulnhub"]
+tags=["vulnerable-machine"]
 +++
 
 # Orcus

@@ -1,12 +1,15 @@
 +++
 title = "OWASP Broken Web Apps WackoPicko"
 slug = "owasp-broken-web-apps-wackopicko"
+[taxonomies]
+categories=["vulnerable-web-app"]
+tags=["web", "owasp"]
 +++
 
 Right off the bat, try hitting the search box with a simple XSS payload:
 
 {% highlight javascript %}
-search.php?query=<script>alert(1)<%2Fscript>&x=24&y=12
+search.php?query=<script>lt;script<script>gt;alert(1)<%2Fscript>&x=24&y=12
 {% endhighlight %}
 
 #/guestbook.php

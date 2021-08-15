@@ -1,6 +1,9 @@
 +++
 title = "Impersonating local requests with curl"
 slug = "impersonating-local-requests-withcurl"
+[taxonomies]
+categories=["linux"]
+tags=["cli"]
 +++
 
 {% highlight bash %}

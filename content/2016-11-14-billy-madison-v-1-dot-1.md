@@ -1,6 +1,9 @@
 +++
 title = "Billy Madison v1.1"
 slug = "billy-madison"
+[taxonomies]
+categories=["vulnhub"]
+tags=["vulnerable-machine"]
 +++
 
 Starting by scanning the hosts with nmap:

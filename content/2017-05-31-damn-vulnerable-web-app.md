@@ -1,6 +1,9 @@
 +++
-title = "Damn vulnerable web app"
+title = "Damn vulnerable-web-app"
 slug = "damn-vulnerable-web-app"
+[taxonomies]
+categories=["vulnerable-web-app"]
+tags=["web"]
 +++
 
 #Brute force

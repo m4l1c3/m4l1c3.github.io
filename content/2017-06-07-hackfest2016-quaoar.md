@@ -1,6 +1,9 @@
 +++
 title = "hackfest2016-Quaroar"
 slug = "hackfest-2016-quaroar"
+[taxonomies]
+categories=["vulnhub"]
+tags=["vulnerable-machine"]
 +++
 # Quaoar
 

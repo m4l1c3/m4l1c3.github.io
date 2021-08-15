@@ -1,6 +1,9 @@
 +++
 title = "hackfest2016-Sedna"
 slug = "hackfest-2016-sedna"
+[taxonomies]
+categories=["vulnhub"]
+tags=["vulnerable-machine"]
 +++
 
 # Sedna
