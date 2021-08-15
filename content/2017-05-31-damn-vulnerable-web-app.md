@@ -1,10 +1,10 @@
 +++
 title = "Damn vulnerable-web-app"
 slug = "damn-vulnerable-web-app"
+default_language = "en"
 [taxonomies]
 categories=["vulnerable-web-app"]
 tags=["web"]
-default_language = "en"
 +++
 
 #Brute force
