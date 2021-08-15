@@ -11,23 +11,36 @@ highlight_code = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
 
-theme = "after-dark"
-
+# Register Taxonomies
 taxonomies = [
-    # You can enable/disable RSS
-    {name = "categories", feed = true},
-    {name = "tags", feed = true},
+  {name="categories", rss=true},
+  {name="tags", rss=true},
 ]
+
+theme = "zola.386"
+
 [extra]
 # Put all your custom variables here
 keywords = "hack"
 author = "m4l1c3"
+label_tags = "Tags"
+label_tag = "Tag"
+label_categories = "Categories"
+label_category = "Category"
+label_author = "Author"
+label_date = "Date"
+label_taxonomy = "Taxonomy"
+label_reading = "Reading time"
+label_read_more = "Read more"
 year = "2021"
 theme_color = "#000084"
 is_netlify = false
 language_code = "en-US"
 title_addition = "m4l1c3.github.io"
-
+zola386_menu = [
+  {path="/", name="Home"},
+]
+label_date = "Date"
 # after_dark_menu = [
 #     {url = "$BASE_URL", name = "Home"},
 #     {url = "$BASE_URL/categories", name = "Categories"},
