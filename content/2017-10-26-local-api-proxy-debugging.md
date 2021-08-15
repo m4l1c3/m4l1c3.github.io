@@ -10,10 +10,10 @@ tags=["dotnet", "burpsuite"]
 
 Add the following to your Web.config:
 
-{% highlight xml %}
+```xml
 <system.net>
   <defaultProxy>
     <proxy proxyaddress="http://127.0.0.1:8080" bypassonlocal="False" />
   </defaultProxy>
 </system.net>
-{% endhighlight %}
+```

