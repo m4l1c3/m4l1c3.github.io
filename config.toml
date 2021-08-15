@@ -19,13 +19,13 @@ taxonomies = [
 
 theme = "zola.386"
 
+default_language = "en"
 [extra]
 # Put all your custom variables here
 keywords = "hack"
 author = "m4l1c3"
 label_tags = "Tags"
 label_tag = "Tag"
-default_language = "en"
 label_categories = "Categories"
 label_category = "Category"
 label_author = "Author"
