@@ -18,8 +18,9 @@ taxonomies = [
 ]
 
 theme = "zola.386"
-
 default_language = "en"
+language_code = "en-US"
+
 [extra]
 # Put all your custom variables here
 keywords = "hack"
@@ -36,7 +37,6 @@ label_read_more = "Read more"
 year = "2021"
 theme_color = "#000084"
 is_netlify = false
-language_code = "en-US"
 title_addition = "m4l1c3.github.io"
 zola386_menu = [
   {path="/", name="Home"},
