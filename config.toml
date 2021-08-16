@@ -17,7 +17,7 @@ taxonomies = [
   {name="tags", rss=true},
 ]
 
-theme = "zola.386"
+theme = "after-dark"
 default_language = "en"
 language_code = "en-US"
 
