@@ -16,7 +16,7 @@ Looking at the page, the name parameter probably isn't sql injectable, but proba
 Throwing:
 
 ```javascript
-<script>alert(1)</script>
+&lt;script&gt;alert(1)&lt;/script&gt;
 ```
 
 into the URL for the unionguessname GET parameter worked.

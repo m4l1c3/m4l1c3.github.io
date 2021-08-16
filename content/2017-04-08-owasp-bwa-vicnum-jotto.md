@@ -20,7 +20,7 @@ Luckily it did end up starting with an r, that way I didn't have to play the ann
 After getting to the scoreboard page I noticed that the name get parameter is being injected into an HTML string on the page, try making this the name:
 
 ```javascript
-<script>alert(1)</script>
+&lt;script&gt;alert(1)&lt;/script&gt;
 ```
 
 into the URL for the name GET parameter worked.

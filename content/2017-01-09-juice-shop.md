@@ -12,7 +12,7 @@ tags=["web", "owasp"]
 
 I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:
 ```html
-<script type="text/javascript">alert('hi');</script>
+&lt;script type="text/javascript"&gt;alert('hi');&lt;/script&gt;
 ```
 Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.
 
@@ -32,7 +32,7 @@ Looks like I found the scoreboard for the app and it is available at the followi
 ```
 Now that I've got a list of the challenges I do the following as a search:
 ```html
-<script>alert("XSS1")</script>
+&lt;script&gt;alert("XSS1")&lt;/script&gt;
 ```
 Which successfully performs a reflected XSS attack.
 
@@ -148,7 +148,7 @@ I'm going to start by trying to perform a GET through HttpRequested (firefox plu
 
 So far so good, next I tried getting a single product with this URL: <https://quiet-lake-65056.herokuapp.com/api/Products/1>, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:
 ```json
-{"description": "<script>alert(\"XSS3\")</script>"}
+{"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"}
 ```
 
 Success
@@ -168,7 +168,7 @@ would translate to:
 Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:
 
 ```html
-<<script>alert("XSS4")</script>script>alert("XSS4")<</script>/script>
+&lt;&lt;script&gt;alert("XSS4")&lt;/script&gt;script&gt;alert("XSS4")&lt;&lt;/script&gt;/script&gt;
 ```
 
 Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the "fork me on github" link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.
