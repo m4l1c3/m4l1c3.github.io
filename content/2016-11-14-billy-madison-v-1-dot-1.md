@@ -1,6 +1,7 @@
 +++
 title = "Billy Madison v1.1"
 slug = "billy-madison"
+default_language = "en"
 [taxonomies]
 categories=["vulnhub"]
 tags=["vulnerable-machine"]
