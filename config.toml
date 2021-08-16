@@ -41,14 +41,15 @@ year = "2021"
 theme_color = "#000084"
 is_netlify = false
 title_addition = "m4l1c3.github.io"
+title = "m4l1c3.github.io"
 zola386_menu = [
   {path="/", name="Home"},
 ]
 label_date = "Date"
-# after_dark_menu = [
-#     {url = "$BASE_URL", name = "Home"},
-#     {url = "$BASE_URL/categories", name = "Categories"},
-#     {url = "$BASE_URL/tags", name = "Tags"},
-#     {url = "https://google.com", name = "Google"},
-# ]
+after_dark_menu = [
+    {url = "$BASE_URL", name = "Home"},
+    {url = "$BASE_URL/categories", name = "Categories"},
+    {url = "$BASE_URL/tags", name = "Tags"},
+    {url = "$BASE_URL/atom.xml", name = "Feed"},
+]
 after_dark_title = "m4l1c3.github.io"
