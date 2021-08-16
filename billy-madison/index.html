@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Billy Madison v1.1</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>3 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2016-11-14
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Starting by scanning the hosts with nmap:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">nmap -T4 -A -v -p0-65535 192.168.110.105 -oN nmap-results.txt
+</code></pre>
+<ul>
+<li>T4 for faster execution</li>
+<li>A for OS detection</li>
+<li>p0-65535 for scanning ports 0 - 65535</li>
+<li>oN nmap-results.txt for writing output to a file using the &quot;normal&quot; format.  Also supports xml, script kiddy, and grepable format</li>
+</ul>
+<p>The scan returned the following:</p>
+<ul>
+<li>Wordpress site - 69</li>
+<li>Another site - 80</li>
+<li>Possible telnet - 23</li>
+<li>FTP - 21</li>
+<li>SSH - 1974, weird</li>
+</ul>
+<h2 id="telnet">Telnet</h2>
+<p>Trying to connect via telnet I got a message mentioning ROTten passwords, maybe ROT-13 encoded (http://decode.org/) Got back exschmenuating.</p>
+<p>##Another &quot;Site&quot;
+Checking that as a folder, got lucky and found &quot;Eric's&quot; secret page.</p>
+<p>Alternate Route:
+Using cewl against the Billy Madison script from here: http://www.springfieldspringfield.co.uk/movie_script.php?movie=billy-madison and generating a wordlist:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">cewl -w billy-madison-wordlist.list -d 0 -v http://www.springfieldspringfield.co.uk/movie_script.php?movie=billy-madison
+</code></pre>
+<p>Which found: exschmenuating</p>
+<p>Then run that through dirbuster and brute force on our new wordlist, this also finds the hidden &quot;site&quot;</p>
+<p>Also found a banned hosts file as well showing I'd been banned from connecting via telnet.</p>
+<p>In Eric's notes it looks like he may have been sending a phishing e-mail to Veronica and mentioned the file containing everything (probably a network capture) had her name in it.  Since Kali comes with the rockyou wordlist I generated a new word list containing anything that had 'veronica' in it with this command:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">grep -ir 'veronica' /usr/share/wordlists/rockyou.txt >> ./veronica.list
+</code></pre>
+<p>Then ran that through dirbuster with the file extensions: pcap and cap on the subdirectory /exschmenuating which found: 012987veronica.cap.</p>
+<p>Time to grab that through the browser or with wget and open up Wireshark.  I was able to follow the TCP stream (under analyze in the menus) to step through the emails and see the communication back and forth between her and Eric.</p>
+<p>Looks like the machines &quot;anti-virus&quot; caught the malware, but unfortunately Veronica had Eric upload the file with FTP so she can just run the executable, she gave a weird hint referencing the &quot;Spanish Armada&quot; fortunately I've seen the movie and a youtube video was included.  When the spanish armada is mentioned Billy states the following guesses, seems like port numbers: 1466 67 1469 1514 1981 1986.  After some googling it turns out there is a thing called port knocking, basically if you have a service you want to hide you can require that ports get pinged in a specific order another port that the service is running on will open up, then pinging the ports in reverse order closes the service's port.</p>
+<p>With this bash command I was able to ping all the ports in order against the host:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">for x in 1466 67 1469 1514 1981 1986; do nmap -Pn --host-timeout 201 --max-retries 0 -p $x bm; done
+</code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnhub/">vulnhub</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/vulnerable-machine/">vulnerable-machine</a>
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

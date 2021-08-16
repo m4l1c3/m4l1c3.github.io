@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">OWASP Juice Shop</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>16 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2017-01-09
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>#OWASP Juice Shop</p>
+<p>I started this process off by trying to throw some JavaScript into the search box, looks vulnerable to XSS:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;script type="text/javascript"&gt;alert('hi');&lt;/script&gt;
+</code></pre>
+<p>Results in an alert popping up after the site issues a GET request to the server, followed by a UI alert stating an objective had been reached, finding unhandled exceptions.</p>
+<p>Next I looked through the login page's source to see if anything sticks out and found this:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><!--
+    <li class="dropdown">
+       <a href="#/score-board">Score Board</a>
+    </li>
+-->
+</code></pre>
+<p>Looks like I found the scoreboard for the app and it is available at the following route:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><a href="#/score-board">Score Board</a>
+</code></pre>
+<p>Now that I've got a list of the challenges I do the following as a search:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;script&gt;alert("XSS1")&lt;/script&gt;
+</code></pre>
+<p>Which successfully performs a reflected XSS attack.</p>
+<p>I next went through the process of placing an order and noticed the URL for my receipt was using a subdirectory, I tried browsing to the folder /ftp and was presented with files I could download, which ended up getting me another achievement: access a confidential document</p>
+<p>Next I was able to get to the administration section of the store by going to:</p>
+<p>#/administration</p>
+<p>Once on the admin page I was able to get another achievement by deleting the only user comment with a 5 star rating</p>
+<p>Next I see there is a task to login as the administrator.  Based on the fact that the site already seems vulnerable to SQL injection I am going to fire up Burp Suite and try some things, the first place that came to mind to check was the login form.  I already know the admin user from getting access to the admin page that wasn't secured, but I'm going to just try using the username/email field for injection.</p>
+<p>After some googling (or in my case duck duck go-ing) I was lead to FuzzDB and plugged the xplatform list under attack/detect.  After inspecting the responses it looks like this super simple gem: a' or 1=1-- will do the trick.  Try using that as my user and bam, logged in as admin.</p>
+<p>Since I'm already focused on the admin login I'm next going to try and login as admin without performing SQL injection.  Back to Burp Suite.  This time I'm going to try and brute force the admin login now that I know the email address: admin@juice-sh.op.  After using Burp's intruder with the &quot;big.txt&quot; from Kali's dirb wordlists Looks like we have a successful payload: admin123.</p>
+<p>Now that I've gotten that one I noticed that we have challenges to login as jim and and bender, might as well try the same technique with these two.</p>
+<p>Another challenge: Place an order that makes you rich.</p>
+<p>First I tried just manipulating the markup to see if I'd be able to just change the value and then update the quantity, however the model binding in angular kept that from working.</p>
+<p>Back to Burp, this should be an easy task using the intercept.  Once everything is up and running I can see in the quantity being passed to the server, after changing the value to -100000 and forwarding traffic I can see a large negative total for the line item, now to checkout, and bam challenge completed.</p>
+<p>Now that I've gotten access to admin I'm going to take a look at getting some of the hidden files in that /ftp directory.  Right now the two .bak fils are being blocked, lets head over to burp to try and use repeater to get these files out.  I got stuck on this one and watched a walkthrough and, basically passing in null characters to the URL to trick the express routing, I initially tried %00, which didn't work, then tried %2500 and got through: /ftp/package.json.bak%2500.pdf to get the file.</p>
+<p>This ended up being the same for retrieving the easter egg and old coupon file.</p>
+<p>For the easter egg I got back a base64 encoded value: L2d1ci9xcmlmL25lci9mYi9zaGFhbC9ndXJsL3V2cS9uYS9ybmZncmUvcnR0L2p2Z3V2YS9ndXIvcm5mZ3JlL3J0dA== that decodes to: /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt</p>
+<p>Another challenge that has been sticking in my head is the one about applying advanced crypto-analysis to the easter egg.  I had already identified the easter egg contents to be base64 encoded, however after decoding it just looked like an absurd file path.  I got stuck on this one and ended up checking a walkthrough, looks like it's rot13 encoded, after decoding I got: /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg and tried appending this to the base URL and got a new page along with challenge completed.</p>
+<p>For the coupon file:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">n<MibgC7sn
+mNYS#gC7sn
+o*IVigC7sn
+k#pDlgC7sn
+o*I]pgC7sn
+n(XRvgC7sn
+n(XLtgC7sn
+k#*AfgC7sn
+q:<IqgC7sn
+pEw8ogC7sn
+pes[BgC7sn
+l}6D$gC7ss
+</code></pre>
+<p>Now that I have the site's package.json file (node js package config) I can run an npm install and see if any dependencies have vulnerabilities, after running an npm install looks like sequelize and minimatch are both vulnerable because they're using an outdate package.  Looks like another challenge solver: Inform the shop about a vulnerable library it is using.</p>
+<p>Looking back at the score board looks like we have an item around getting back all the users/passwords from our database, time to fire up sqlmap.  I ended up running the following command which got me back the search parameter to use:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">sqlmap -u "https://quiet-lake-65056.herokuapp.com/rest/product/search?q=test" --level=2 -p "q" --dbms="sqlite" --dump --proxy=http://10.1.206.89:8081
+</code></pre>
+<p>The parameters are used as follows:</p>
+<ul>
+<li>-u = URL to attack</li>
+<li>-level = the level of attack to execute</li>
+<li>-p = parameter to try and exploit</li>
+<li>-dbms = the dbms we are targeting</li>
+<li>-dump = attempt to pull the database</li>
+<li>-proxy = the proxy to run requests through</li>
+</ul>
+<p>Once we get through things the following comes back with the following:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">sear')) union all select null,null,null,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq'-- IvXq
+</code></pre>
+<p>Plugging that into the browser we get a partial product grid.  Time to start figuring out how to get the users and password back.</p>
+<p>I ended up with this for the final search query:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">sear')) union all select id,email,password,null,null,null,null,'qzzjq'||'QHWDqQappkdzrcmfZObclJekqtZryURacjvmYOqV'||'qaakq' from users-- IvXq
+</code></pre>
+<p>A list of users and their hashed passwords, another challenge completed.</p>
+<p>Now to try and figure out some of these passwords.  I put the hashes all into this site:
+<a href="https://crackstation.net/">https://crackstation.net/</a></p>
+<p>This site was able to crack 2 of the user passwords, admin (already known) and jim.  Now to login as jim@juice-sh.op since that's a challenge.</p>
+<p>I used the following credentials:</p>
+<p>User: jim@juice-sh.op
+Pass: ncc-1701</p>
+<p>Another challenge completed.</p>
+<p>The password cracker I used identified the passwords it cracked as being md5, there is a challenge about informing the shop they're using a library/algorithm incorrectly so I gave it a shot and said the md5 implementation is weak, another challenge completed.</p>
+<p>Another challenge is to give ourselves 80% or more off of an order.</p>
+<p>Looking back at the coupon codes I found earlier it looks like it is time to figure out how those are encoded.  Maybe the package.json file from earlier will have a hint.  After seeing what several of the dependencies that we have listed are for, z85 appears to be a possibility for generating the password codes.  I downloaded the z85-cli and z85 modules from npm and ran a few coupon codes through the decoder, low and behold it decoded to the following format: MONYR-%% so I encoded JAN17-90 and got: n&lt;Mibh.v3z, then checking out and using my code, another challenge completed.</p>
+<p>Next I am looking at the file upload vulnerabilities, the first seems like a simple task in Burp.  Let's upload a small pdf, then intercept the traffic and upload the file with a different extension.  Success, another challenge done.</p>
+<p>The second however was a bit more tricky.  At a glance I'm guessing that the previous method with Burp is likely to be the way to go.  I started off first by just modifying my order_ from placing orders for previous challenges to get its file size a bit closer to 100kb, then messed with the file's contents in the upload request and kept getting an error.  After taking a break and coming back to it, I only used the stream section of the file for padding size and was able to intercept the upload request, update the payload and get the challenge completed.</p>
+<p>Now for more XSS based challenges, looks like we have 3 more outstanding, the first of which is performing a persisted XSS attack by circumventing a client-side security mechanism.  Sounds like another case where Burp will excel.</p>
+<p>I had to try several forms first of which was the complaint form, then the contact form, and finally the user registration form.  Through this page I was able to register a user, then catch the request for submitting the user's data and put in the required XSS (&lt;script&gt;alert(&quot;XSS2&quot;)&lt;/script&gt;) payload as the user's name, another challenge completed.</p>
+<p>The next XSS challenge is to perform a persisted XSS attack without using the front-end at all, this seems like talking directly to the site's API.  Watching the initial site load requests in Burp it looks like we have a rest API behind the scenes the request I saw this in was making a call to /rest/products, since rest uses GET/POST/PUT I'm thinking we can possibly store the XSS payload by doing a PUT for a given product.  I started out by simply trying: <a href="https://quiet-lake-65056.herokuapp.com/api">https://quiet-lake-65056.herokuapp.com/api</a> to access the API and get some info, which returns:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{"status":"success","data":[{"name":"BasketItem","tableName":"BasketItems"},{"name":"Challenge","tableName":"Challenges"},{"name":"Complaint","tableName":"Complaints"},{"name":"Feedback","tableName":"Feedbacks"},{"name":"Product","tableName":"Products"},{"name":"User","tableName":"Users"}]}
+</code></pre>
+<p>This looks like a map of the different server-side API calls start points.</p>
+<p>I'm going to start by trying to perform a GET through HttpRequested (firefox plugin to make http requests).  <a href="https://quiet-lake-65056.herokuapp.com/api/Products/">https://quiet-lake-65056.herokuapp.com/api/Products/</a> was my first try, with a GET this just returns all the products in a JSON response object.</p>
+<p>So far so good, next I tried getting a single product with this URL: <a href="https://quiet-lake-65056.herokuapp.com/api/Products/1">https://quiet-lake-65056.herokuapp.com/api/Products/1</a>, success.  Now I'm guessing we can use a PUT to update this object and persist the payload.  Looking at the JSON that comes back from the GET I built this as the payload for a PUT to update a product:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{"description": "&lt;script&gt;alert(\"XSS3\")&lt;/script&gt;"}
+</code></pre>
+<p>Success</p>
+<p>Now for the last challenge, bypassing a server-side security mechanism.  After some pondering I decided a good way to get visibility into the server-side code would be the package.json backup we retrieved in an earlier challenge.  Int he dependencies for the application there is an item called sanitize-html.  I am guessing this will be what I have to get past.  After googling the node module and looking through issues from the specific version called out in dependencies I found a security issue based on recursive application of sanitization.  Here was the item identified in the issue:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><<img src="csrf-attack"/>img src="csrf-attack"/>
+</code></pre>
+<p>would translate to:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><img src="csrf-attack"/>
+</code></pre>
+<p>Now to try and do that with our required XSS payload.  After some tinkering I ended up submitting this as the message in the contact form to complete the challenge:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;&lt;script&gt;alert("XSS4")&lt;/script&gt;script&gt;alert("XSS4")&lt;&lt;/script&gt;/script&gt;
+</code></pre>
+<p>Next challenge: Wherever you go there you are.  This was quite perplexing, I ended up googling the challenge to get some help.  It turns out the &quot;fork me on github&quot; link does a redirect, rather than just linking to github, seems super weird given the scenario, but anyway, I started in on this and was able to figure out that passing a URL encoded null character allowed me to redirect back to the juice shop home page (which loads all funky) then going back to the site normally I had completed the challenge.</p>
+<p>Another challenge I have been having trouble with is the item getting the Christmas 2014 deal and buying it.  Since we know the search is vulnerable to SQL injection I started by trying to get back all products rather than the ones that are displayed on a page with this search:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">sear')) union all select null,id,description,price,null,null,null,null from products --
+</code></pre>
+<p>This got me the ability to see the item and think I was adding it to my cart, but I wasn't ever able to actually purchase the item.  After googling and watch a video from 7 minute security I had the following payload (provided by OWASP dev team):</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">christmas%25'))--
+</code></pre>
+<p>The %25 ends up decoding to % which closes the SQL like that is being used for a keyword search, my guess here is that the UNION ALL method I tried first was not grabbing some piece of data that was required for the angular code to properly bind all its parameters on the front-end resulting in an improper add to basket.</p>
+<p>Now to try and find the language that never got published.  This looks like a job for Burp after inspecting the URLs that are requested when picking a language it looks like each language is just a JSON file with the language code as it's name.  I ended up googling an API language code list and built a small wordlist from the page I found, then fired Burp's intruder at the site's i8n with the language code as the payload placeholder so I was issuing GET requests to <a href="https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json">https://quiet-lake-65056.herokuapp.com/i18n/placeholder.json</a> with placeholder being the wordlist items created from our googling.  I only had the free version of Burp available so it took a while, however I was able to find the missing language and complete the challenge.</p>
+<p>After a lot of failed attempts, I ended up looking at the source (since it was available on github) and figured out the language that never made it to production was klingon -- tlh) so all my brute forcing failed based on using &quot;normal&quot; languages.  Either way though, challenge completed.</p>
+<p>Logging in with Bjeorns account without using sql injection or hacking his account.</p>
+<p>This one was pretty tough.  I had to find a walkthrough to discover that my heroku deployed app was not setup correctly.  I ended up having to configure this through both Google and in the juice shop files on my forked copy.  Once OAuth was setup though, I was now able to use the login with Google feature.</p>
+<p>Watching requests in Burp I was able to see the requests and what was coming back to the site from a Google login, this was posted to /api/Users:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{"email":"m4l1c3@m4l1ce.me","password":"bTRsMWMzQG00bDFjZS5tZQ=="}
+</code></pre>
+<p>Looks like a base64 encoded password gets sent back from Google, which was then forwarded to /rest/user/login:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{"email":"m4l1c3@m4l1ce.me","password":"bTRsMWMzQG00bDFjZS5tZQ==","oauth":true}
+</code></pre>
+<p>After running</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">echo bTRsMWMzQG00bDFjZS5tZQ== | base64 -D m4l1c3@m4l1c3.me
+</code></pre>
+<p>I get the email back.</p>
+<p>Then all we have to do is base64 encode his email and get: YmpvZXJuLmtpbW1pbmljaEBnb29nbGVtYWlsLmNvbQ==</p>
+<p>Now we are able to login as Bjeorn, another challenge completed.</p>
+<p>Next I have been wanting to figure out the OAuth2 exploit: logging in as the CISO.  Now we are logging in as a user that we do not have a known password for.  At least there is an OAuth hint to point us in the right direction.</p>
+<p>I messed around with this quite a bit, I know we are going to need to utilize the login with Google button, however I am not really sure what to do beyond that.  After just staring at the login page for a while, I had an idea.  What happens when the remember me button is checked while logging in as a user we have credentials for.  I tried with admin@juice-sh.op and admin123, looks like a new header is present on our HTTP requests: X-User-Email, this gets set to the email of whichever user has logged in.</p>
+<p>Now to try and see what happens if I try and fail to login as the CISO with ciso@juice-sh.op as the user and password as the password.  Login failed, but the header did update.</p>
+<p>After pondering some more I tried just logging in with OAuth since my browser was already authenticated to Google, which ended up actually working, the X-User-Email option being set prior to the successful OAuth login I was logged in as the CISO, challenge completed.</p>
+<p>Now, one I had skipped quite a while ago, logging in as Bender, since we have already identified that the login page is injectable, lets try just using this as the username and escape the query:</p>
+<p>bender@juice-sh.op'--</p>
+<p>This ends up making the query look like:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">SELECT * FROM USERS WHERE email='bender@juice-sh.op'
+</code></pre>
+<p>And this logs us in, now that we're impersonating Bender we should change his password to get the other challenge, looking at the change password page, looks like we would need to know his password, which we do not.  Looking at the requests in Burp it makes a GET request to update the password, seems weird since data is being written, but whatever I guess.</p>
+<p>I try a lot of different items with Burp's repeater with no success.  Then I had the idea to just remove the current query string:</p>
+<p>/rest/user/change-password?current=%27&amp;new=password&amp;repeat=password</p>
+<p>turns to:</p>
+<p>/rest/user/change-password?new=password&amp;repeat=password which worked, another challenge completed.</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnerable-web-app/">vulnerable-web-app</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/web/">web</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://m4l1c3.github.io/tags/owasp/">owasp</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

