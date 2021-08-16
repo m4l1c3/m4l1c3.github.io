@@ -23,6 +23,7 @@ taxonomies = [
 theme = "after-dark"
 default_language = "en"
 language_code = "en-US"
+title = "m4l1c3.github.io"
 
 [extra]
 # Put all your custom variables here
@@ -41,7 +42,6 @@ year = "2021"
 theme_color = "#000084"
 is_netlify = false
 title_addition = "m4l1c3.github.io"
-title = "m4l1c3.github.io"
 zola386_menu = [
   {path="/", name="Home"},
 ]
