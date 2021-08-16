@@ -1,6 +1,7 @@
 +++
 title = "hackfest2016-Sedna"
 slug = "hackfest-2016-sedna"
+default_language = "en"
 [taxonomies]
 categories=["vulnhub"]
 tags=["vulnerable-machine"]

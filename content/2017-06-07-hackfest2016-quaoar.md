@@ -1,6 +1,7 @@
 +++
 title = "hackfest2016-Quaroar"
 slug = "hackfest-2016-quaroar"
+default_language = "en"
 [taxonomies]
 categories=["vulnhub"]
 tags=["vulnerable-machine"]

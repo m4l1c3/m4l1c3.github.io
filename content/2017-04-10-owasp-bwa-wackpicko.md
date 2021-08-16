@@ -1,6 +1,7 @@
 +++
 title = "OWASP Broken Web Apps WackoPicko"
 slug = "owasp-broken-web-apps-wackopicko"
+default_language = "en"
 [taxonomies]
 categories=["vulnerable-web-app"]
 tags=["web", "owasp"]

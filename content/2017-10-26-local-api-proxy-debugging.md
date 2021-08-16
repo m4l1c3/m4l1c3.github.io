@@ -1,6 +1,7 @@
 +++
 title = "Local API Proxy Debugging in .Net"
 slug = "local-api-proxy-debugging-dot-net"
+default_language = "en"
 [taxonomies]
 categories=["code"]
 tags=["dotnet", "burpsuite"]

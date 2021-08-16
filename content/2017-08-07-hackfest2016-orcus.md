@@ -1,6 +1,7 @@
 +++
 title = "hackfest2016-Orcus"
 slug = "hackfest-2016-orcus"
+default_language = "en"
 [taxonomies]
 categories=["vulnhub"]
 tags=["vulnerable-machine"]

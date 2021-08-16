@@ -1,6 +1,7 @@
 +++
 title = "OWASP Juice Shop"
 slug = "juice-shop"
+default_language = "en"
 [taxonomies]
 categories=["vulnerable-web-app"]
 tags=["web", "owasp"]

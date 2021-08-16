@@ -1,6 +1,7 @@
 +++
 title = "OWASP Broken Web Apps Vicnum - Jotto"
 slug = "owasp-broken-web-apps-vicnum-jotto"
+default_language = "en"
 [taxonomies]
 categories=["vulnerable-web-app"]
 tags=["web", "owasp"]

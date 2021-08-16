@@ -1,6 +1,7 @@
 +++
 title = "OWASP Broken Web Apps Vicnum - Guessnum"
 slug = "owasp-broken-web-apps-vicnum-guessnum"
+default_language = "en"
 [taxonomies]
 categories=["vulnerable-web-app"]
 tags=["web", "owasp"]
